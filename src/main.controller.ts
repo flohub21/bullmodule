@@ -22,13 +22,10 @@ export class MainController {
         let listCustomer = [];
         let listContract = [];
        listInvoice = await this.invoiceCont.search(body);
-       console.log('invoice');
        if(listInvoice.length === 0){
            listCustomer = await this.customerCont.search(body.search);
-           console.log('cust');
            if(listCustomer.length === 0) {
                listContract = await this.contractCont.search(body.search);
-               console.log('contract');
                if(listContract.length === 0) {
                    throw new NoResultException();
                }
