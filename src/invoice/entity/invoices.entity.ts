@@ -310,6 +310,9 @@ export class Invoices {
     @Column()
     note: string;
 
+    @Column()
+    id_group: string;
+
     clientName: string;
     canBeModified: boolean = true;
     status: string[];

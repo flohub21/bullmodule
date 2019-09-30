@@ -25,82 +25,140 @@ export class OperationsWorkflowController {
         return await this.operationService.findAllStatus();
     }
 
+    /**
+     * create the operation and manage all changes to do in the data base
+     * @param body any
+     */
     @Post('create')
     async create(@Body() body) {
+        console.log('create');
         let listOperation: Operations_workflow[] = body.operation;
         let result: any;
+        let idGroup: number;
+        if(listOperation[0].status.status === "group"){
+            idGroup = new Date().getTime();
+        }
         for (let key in listOperation) {
             listOperation[key].user_id = listOperation[key].user.id;
             listOperation[key].status_id = listOperation[key].status.id;
-            if(listOperation[key].status.status === 'GENERATE_CREDIT_NOTE_ANULATION' || listOperation[key].status.status === 'GENERATE_CREDIT_NOTE_REFUND' ){
-                let request = await this.saveRequest(listOperation[key],'ANULATION');
+            if (listOperation[key].status.status === 'GENERATE_CREDIT_NOTE_ANULATION' || listOperation[key].status.status === 'GENERATE_CREDIT_NOTE_REFUND') {
+                let request = await this.saveRequest(listOperation[key], 'ANULATION');
                 listOperation[key].request_id = request.id;
             }
-            if (listOperation[key].status.status === "RAPPEL_SEND" || listOperation[key].status.status === "SEPA_SUBMITTED") {
+            if (listOperation[key].status.status.indexOf('sepa') !== -1 || listOperation[key].status.status === 'cancel_dom') {
                 let res: any = await this.operationService.getNbSpecialOperation(listOperation[key]);
-                listOperation[key].more_information = 'number : ' + (+res[0].nb + 1);
+                listOperation[key].more_information =  (+res[0].nb + 1) + '';
             }
-            console.log(listOperation[key]);
-            console.log('-------------------------');
             let res: Operations_workflow = await this.operationService.save(listOperation[key]);
-            switch (res.status.status) {
-                case "ENTER_PAYMENT": {
-                    let payment = this.paymentController.getPaymentList(res.invoice_reference, body.payment, res.internal_comment, +res.id);
-                    return await this.paymentController.create({payment: payment});
-                    break;
-                }
-                case "PAYED": {
-                    let falseInvoice = new Invoices();
-                    falseInvoice.invoice_ref = res.invoice_reference;
-                    await this.invoiceController.saveStatus([falseInvoice], 'payed');
-                    if (!result) {
-                        result = {
-                            'payed': 1,
-                            'status': 'payed'
+
+            if (res.status.status.indexOf('sepa') === -1 && res.status.status !== 'cancel_dom') {
+
+                let resultTmp: any;
+                switch (res.status.status) {
+                    case "new_payment": {
+                        let payment = this.paymentController.getPaymentList(res.invoice_reference, body.payment, res.internal_comment, +res.id);
+                        resultTmp = await this.paymentController.create({payment: payment});
+                        break;
+                    }
+                    case 'send_invoice': {
+                        let falseInvoice = new Invoices();
+                        falseInvoice.invoice_ref = res.invoice_reference;
+                        await this.invoiceController.saveStatus([falseInvoice], res.status.status);
+                        let invoice = await this.invoiceController.find({invoice_ref: res.invoice_reference});
+                        if (invoice.send_out_email !== null) {
+                            resultTmp = {
+                                sendStatus: 'email'
+                            }
+                        } else {
+                            resultTmp = {
+                                sendStatus: 'post'
+                            }
+                        }
+                        break;
+                    }
+                    case 'notsend_invoice': {
+                        let falseInvoice = new Invoices();
+                        falseInvoice.invoice_ref = res.invoice_reference;
+                        await this.invoiceController.saveStatus([falseInvoice], res.status.status);
+                        resultTmp = {
+                            sendStatus: 'notsend'
                         };
-                    }
-                    break;
-                }
-                case "RAPPEL_SEND": {
-                    if (!result) {
-                        result = [{
-                            nbRappel: +res.more_information
-                        }];
 
-                    } else {
-                        result.push({
-                            nbRappel: +res.more_information
-                        });
+                        break;
                     }
-                    break;
-                }
-                case "SEPA_SUBMITTED": {
-                    if (!result) {
-                        result = [{
-                            nbSepaSubmit: +res.more_information
-                        }];
+                    /*case "payed_invoice": {
+                        let falseInvoice = new Invoices();
+                        falseInvoice.invoice_ref = res.invoice_reference;
+                        resultTmp = await this.invoiceController.saveStatus([falseInvoice], res.status.status);
+                        break;
+                    }
+                    case "unpayed_invoice": {
+                        let falseInvoice = new Invoices();
+                        falseInvoice.invoice_ref = res.invoice_reference;
+                        resultTmp = await this.invoiceController.saveStatus([falseInvoice], res.status.status);
+                        break;
+                    }
+                    case "valid_invoice": {
+                        // we create a false invoice with not all data
+                        let falseInvoice = new Invoices();
+                        falseInvoice.invoice_ref = res.invoice_reference;
+                        resultTmp = await this.invoiceController.saveStatus([falseInvoice],res.status.status);
+                        break;
+                    }*/
+                    case "RAPPEL_SEND": {
+                        if (!result) {
+                            result = [{
+                                nbRappel: +res.more_information
+                            }];
 
-                    } else {
-                        result.push({
-                            nbSepaSubmit: +res.more_information
-                        });
+                        } else {
+                            result.push({
+                                nbRappel: +res.more_information
+                            });
+                        }
+                        break;
                     }
-                    break;
-                }
-                case "OPEN": {
-                    let falseInvoice = new Invoices();
-                    falseInvoice.invoice_ref = res.invoice_reference;
-                    await this.invoiceController.saveStatus([falseInvoice], 'unpayed');
-                    if (!result) {
-                        result = {
-                            'payed': 0,
-                            'status': 'unpayed'
-                        };
-                    }
-                    break;
-                }
+                    case "SEPA_SUBMITTED": {
+                        if (!result) {
+                            result = [{
+                                nbSepaSubmit: +res.more_information
+                            }];
 
-            };
+                        } else {
+                            result.push({
+                                nbSepaSubmit: +res.more_information
+                            });
+                        }
+                        break;
+                    }
+                    case "OPEN": {
+                        let falseInvoice = new Invoices();
+                        falseInvoice.invoice_ref = res.invoice_reference;
+                        await this.invoiceController.saveStatus([falseInvoice], 'unpayed');
+                        if (!result) {
+                            result = {
+                                'payed': 0,
+                                'status': 'unpayed'
+                            };
+                        }
+                        break;
+                    }
+                    default: {
+                        let falseInvoice = new Invoices();
+                        falseInvoice.invoice_ref = res.invoice_reference;
+                        resultTmp = await this.invoiceController.saveStatus([falseInvoice], res.status.status,idGroup);
+                        break;
+                    }
+
+                }
+                ;
+                if (!result) {
+                    result = [resultTmp];
+
+                } else {
+                    result.push(resultTmp);
+                }
+            }
         }
        return result;
     }

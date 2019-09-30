@@ -3,8 +3,6 @@ import {InvoiceService} from './invoice.service';
 import {Invoices} from './entity/invoices.entity';
 import {CustomerController} from '../customer/customer.controller';
 import {NoResultException} from "../exception/NoResultException";
-import {OperationsWorkflowController} from "../operations-workflow/operations-workflow.controller";
-import {PaymentsListController} from "../payments-list/payments-list.controller";
 import {Operations_workflow} from "../operations-workflow/entity/operations-workflow.entity";
 import {UserController} from "../user/user.controller";
 import {Operation_invoices_status} from "../operations-workflow/entity/Operation-invoices-status.entity";
@@ -38,27 +36,72 @@ export class InvoiceController {
      * }
      */
     async updateStatus(@Body() body) {
-        const res = await this.saveStatus(body.invoices, body.status);
-        if (res !== false) {
-            for(let key in res){
-                body.invoices.forEach((invoice) => {
-                    invoice[key] = res[key];
-                    this.invoiceService.getInvoiceStatus(invoice);
-                });
-            }
-        }
-        return {
-            ok: true,
-            invoice: body.invoices,
-        };
+        return await this.saveStatus(body.invoices, body.status);
     }
 
-    saveStatus(invoices: Invoices[],status:string){
+    /**
+     * update invoice with specific status
+     * @param invoices
+     * @param status
+     * @param idGroup
+     */
+    saveStatus(invoices: Invoices[],status:string, idGroup: number = null){
         let ref = [];
+        let data:any;
         invoices.forEach((invoice) => {
             ref.push(invoice.invoice_ref);
         });
-        return this.invoiceService.updateStatus(ref, status);
+        switch (status) {
+            case 'valid_invoice':
+                data = {
+                    key:'canceled',
+                    value: '0'
+                };
+                break;
+            case 'cancel_invoice':
+                data = {
+                    key:'canceled',
+                    value: '1'
+                };
+                break;
+            case 'payed_invoice':
+                data = {
+                    key:'payed',
+                    value: '1'
+                };
+                break;
+            case 'unpayed_invoice':
+                data = {
+                    key:'payed',
+                    value: '0'
+                };
+                break;
+            case 'send_invoice' :
+                data ={
+                    key : 'draft',
+                    value :'0'
+                };
+                break;
+            case 'notsend_invoice' :
+                data ={
+                    key : 'draft',
+                    value :'1'
+                };
+                break;
+            case 'group':
+                data = {
+                    key:'id_group',
+                    value: idGroup
+                };
+                break;
+        }
+        return new Promise((resolve) => {
+            this.invoiceService.updateStatus(ref, data).then((res)=>{
+               let ret:any = {};
+               ret[data.key] = data.value;
+               resolve(ret);
+            });
+        });
     }
 
     @Put('update/comment')
@@ -207,6 +250,7 @@ export class InvoiceController {
                 op.status.description = el.description;
                 op.internal_comment = el.operationComment;
                 op.status.status = el.status;
+                op.more_information = el.more_information;
                 el.listOperation = [op];
             }
             if(el.draft === 1){
@@ -221,13 +265,16 @@ export class InvoiceController {
             if(el.period_start && el.period_start.indexOf('/') !== -1){
                 el.period_start = moment(el.period_start, 'DD/MM/YYYY').format('YYYY-MM-DD');
             }
+            if(el.internal_payment_method){
+
+            }
 
         }
         if(listCustomer === null){
             listCustomer = await this.customerCont.getAllById(listId);
         }
         listInvoice = this.addCustomerNameToInvoice(listInvoice, listCustomer);
-      //  this.getInvoiceStatus(listInvoice);
+
         return listInvoice;
     }
 

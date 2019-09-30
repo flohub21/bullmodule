@@ -15,7 +15,7 @@ export class InvoiceService extends RequestService{
                " (SELECT COUNT(id) from operations_workflow o where o.invoice_reference = invoices.invoice_ref  and o.status_id = 16) as nbRappel,"+
                " (SELECT COUNT(id) from operations_workflow o where o.invoice_reference = invoices.invoice_ref  and o.status_id = 17) as nbSepaSubmit"+
                " FROM invoices "+
-               " LEFT JOIN (select o.date as operationDate, o.internal_comment as operationComment, st.description, st.status, o.id as operationId FROM operations_workflow o" +
+               " LEFT JOIN (select o.date as operationDate, o.internal_comment as operationComment, st.description, st.status, o.id as operationId, o.more_information FROM operations_workflow o" +
                "                LEFT JOIN  operation_invoices_status st ON o.status_id = st.id) as op ON op.operationId = " +
                "                (SELECT id from operations_workflow op where op.invoice_reference = invoices.invoice_ref ORDER BY  op.operationDate desc, op.created_at desc LIMIT 1) ";
 
@@ -63,34 +63,15 @@ export class InvoiceService extends RequestService{
      * @param ref string [] reference of invoice which will be updated
      * @param payed number status ( 0 | 1)
      */
-   updateStatus(ref: string[], status: string): Promise<any> {
-        return new Promise((resolve, reject) => {
-            let pay: number;
-            let req: string;
-            if (status === 'payed' ){
-                pay = 1;
-            } else if (status === 'unpayed'){
-                pay = 0;
-            }
-            if (pay !== undefined) {
-                req = 'update invoices set payed = ' + pay + ' where invoice_ref IN (' + this.getINForSql(ref) + ')';
+   updateStatus(ref: string[], data: any): Promise<any> {
+        console.log('update status ');
+        console.log(ref);
+        console.log(data);
+        console.log('--------------------------');
+        let req = 'update invoices set '+ data.key+ ' = '+data.value + ' where invoice_ref IN (' + this.getINForSql(ref) + ')';
+        console.log(req);
 
-                this.repInvoiceMysql.query(req);
-                resolve({
-                    payed: pay,
-                    paymentStatus: status
-                });
-            }
-
-            if(status === 'cancel'){
-                req = 'update invoices set canceled = 1 where invoice_ref IN (' + this.getINForSql(ref) + ')';
-                this.repInvoiceMysql.query(req);
-                resolve({
-                    canceled: 1,
-                });
-            }
-            resolve(false);
-        });
+        return this.repInvoiceMysql.query(req);
     }
 
     /*let rep = connection.getRepository(Invoices);

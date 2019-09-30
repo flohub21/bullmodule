@@ -54,6 +54,10 @@ export class OperationsWorkflowService extends RequestService{
         return this.repRequest.save(req);
     }
 
+    /**
+     * get the number of the same operation for one 1 invoice
+     * @param operation Operations_workflow the operation that we search
+     */
     getNbSpecialOperation(operation: Operations_workflow): Promise<Request>{
         return new Promise((resolve) => {
             const req = "SELECT count('id') as nb from operations_workflow op" +
@@ -61,7 +65,6 @@ export class OperationsWorkflowService extends RequestService{
                 " AND invoice_reference = '"+operation.invoice_reference+"'";
 
             console.log(req);
-
 
            this.repOperation.query(req).then((rs)=>{
               resolve(rs);
