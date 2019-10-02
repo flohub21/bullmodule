@@ -64,12 +64,8 @@ export class InvoiceService extends RequestService{
      * @param payed number status ( 0 | 1)
      */
    updateStatus(ref: string[], data: any): Promise<any> {
-        console.log('update status ');
-        console.log(ref);
-        console.log(data);
-        console.log('--------------------------');
         let req = 'update invoices set '+ data.key+ ' = '+data.value + ' where invoice_ref IN (' + this.getINForSql(ref) + ')';
-        console.log(req);
+        //console.log(req);
 
         return this.repInvoiceMysql.query(req);
     }
@@ -156,7 +152,7 @@ rep.find().then((rs) =>  {
                     " WHERE pod IN ("+this.getINForSql(listPod)+")"+
                     " ORDER BY created_at DESC"+
                     " LIMIT 10";
-        console.log(req);
+        //console.log(req);
         return new Promise(( resolve) => {
             this.repInvoiceMysql.query(req).then((rs) => {
                 resolve(rs);
@@ -165,9 +161,11 @@ rep.find().then((rs) =>  {
     }
 
    findByFilter(data: any): Promise<Invoices[]>{
+        //console.log('generate Request');
         let req = this.filter.generateRequest(this.reqSelect,data);
+
         return new Promise((resolve, reject) => {
-            console.log(req);
+            //console.log(req);
             this.repInvoiceMysql.query(req).then((listInvoice) => {
              resolve(listInvoice);
             });
@@ -188,7 +186,7 @@ rep.find().then((rs) =>  {
             " FROM  `invoices` where payed = 0 and canceled = 0 and customer_num =" + "'" + customerId + "' ORDER BY id DESC LIMIT 1";
             //" FROM  `invoices` where show_my_eida = 1 and payed = 0 and canceled = 0 and customer_num =" + "'" + customerId + "' ORDER BY id DESC LIMIT 1";
             /*const req = "SELECT sum(total_price_with_tax) as notPayed FROM `invoices` where show_my_eida = 1 and payed = 0 and canceled = 0 and customer_num =" + "'" + customerId + "' ORDER BY id DESC LIMIT 1";*/
-            console.log(req);
+            //console.log(req);
             this.repInvoiceMysql.query(req).then((res) => {
                 resolve(res);
             });

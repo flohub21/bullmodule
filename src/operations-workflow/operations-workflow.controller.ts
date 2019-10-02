@@ -9,6 +9,7 @@ import {PaymentsListController} from "../payments-list/payments-list.controller"
 import {InvoiceController} from "../invoice/invoice.controller";
 import {Cm_contract} from "../contract/entity/cm_contract.entity";
 import {ContractController} from "../contract/contract.controller";
+import * as moment from 'moment';
 
 @Controller('operations-workflow')
 @Injectable()
@@ -26,18 +27,35 @@ export class OperationsWorkflowController {
     }
 
     /**
+     * create the operation for all invoice find by filter
+     * @param body any
+     */
+    @Post('create_by_filter')
+    async createByFilter(@Body() body){
+        let listInvoice: Invoices[] = await this.invoiceController.findByFilter(body.filter);
+            let listOperation: Operations_workflow[] = [];
+            listInvoice.forEach((invoice)=>{
+                let op: Operations_workflow = JSON.parse(JSON.stringify(body.operation[0]));
+                op.invoice_reference = invoice.invoice_ref;
+                listOperation.push(op);
+            });
+            body.operation = listOperation;
+            return await  this.create(body);
+        }
+    /**
      * create the operation and manage all changes to do in the data base
      * @param body any
      */
     @Post('create')
     async create(@Body() body) {
-        console.log('create');
         let listOperation: Operations_workflow[] = body.operation;
         let result: any;
         let idGroup: number;
+        let resultTmp: any;
         if(listOperation[0].status.status === "group"){
             idGroup = new Date().getTime();
         }
+        let listInvoiceToUpdate:Invoices[] = [];
         for (let key in listOperation) {
             listOperation[key].user_id = listOperation[key].user.id;
             listOperation[key].status_id = listOperation[key].status.id;
@@ -50,115 +68,88 @@ export class OperationsWorkflowController {
                 listOperation[key].more_information =  (+res[0].nb + 1) + '';
             }
             let res: Operations_workflow = await this.operationService.save(listOperation[key]);
+            let falseInvoice = new Invoices();
+            falseInvoice.invoice_ref = res.invoice_reference;
+            listInvoiceToUpdate.push(falseInvoice);
 
             if (res.status.status.indexOf('sepa') === -1 && res.status.status !== 'cancel_dom') {
-
-                let resultTmp: any;
                 switch (res.status.status) {
                     case "new_payment": {
                         let payment = this.paymentController.getPaymentList(res.invoice_reference, body.payment, res.internal_comment, +res.id);
                         resultTmp = await this.paymentController.create({payment: payment});
-                        break;
-                    }
-                    case 'send_invoice': {
-                        let falseInvoice = new Invoices();
-                        falseInvoice.invoice_ref = res.invoice_reference;
-                        await this.invoiceController.saveStatus([falseInvoice], res.status.status);
-                        let invoice = await this.invoiceController.find({invoice_ref: res.invoice_reference});
-                        if (invoice.send_out_email !== null) {
-                            resultTmp = {
-                                sendStatus: 'email'
-                            }
-                        } else {
-                            resultTmp = {
-                                sendStatus: 'post'
-                            }
-                        }
-                        break;
-                    }
-                    case 'notsend_invoice': {
-                        let falseInvoice = new Invoices();
-                        falseInvoice.invoice_ref = res.invoice_reference;
-                        await this.invoiceController.saveStatus([falseInvoice], res.status.status);
-                        resultTmp = {
-                            sendStatus: 'notsend'
-                        };
-
-                        break;
-                    }
-                    /*case "payed_invoice": {
-                        let falseInvoice = new Invoices();
-                        falseInvoice.invoice_ref = res.invoice_reference;
-                        resultTmp = await this.invoiceController.saveStatus([falseInvoice], res.status.status);
-                        break;
-                    }
-                    case "unpayed_invoice": {
-                        let falseInvoice = new Invoices();
-                        falseInvoice.invoice_ref = res.invoice_reference;
-                        resultTmp = await this.invoiceController.saveStatus([falseInvoice], res.status.status);
-                        break;
-                    }
-                    case "valid_invoice": {
-                        // we create a false invoice with not all data
-                        let falseInvoice = new Invoices();
-                        falseInvoice.invoice_ref = res.invoice_reference;
-                        resultTmp = await this.invoiceController.saveStatus([falseInvoice],res.status.status);
-                        break;
-                    }*/
-                    case "RAPPEL_SEND": {
                         if (!result) {
-                            result = [{
-                                nbRappel: +res.more_information
-                            }];
+                            result = [resultTmp];
 
                         } else {
-                            result.push({
-                                nbRappel: +res.more_information
-                            });
+                            result.push(resultTmp);
                         }
-                        break;
-                    }
-                    case "SEPA_SUBMITTED": {
-                        if (!result) {
-                            result = [{
-                                nbSepaSubmit: +res.more_information
-                            }];
-
-                        } else {
-                            result.push({
-                                nbSepaSubmit: +res.more_information
-                            });
-                        }
-                        break;
-                    }
-                    case "OPEN": {
-                        let falseInvoice = new Invoices();
-                        falseInvoice.invoice_ref = res.invoice_reference;
-                        await this.invoiceController.saveStatus([falseInvoice], 'unpayed');
-                        if (!result) {
-                            result = {
-                                'payed': 0,
-                                'status': 'unpayed'
-                            };
-                        }
-                        break;
-                    }
-                    default: {
-                        let falseInvoice = new Invoices();
-                        falseInvoice.invoice_ref = res.invoice_reference;
-                        resultTmp = await this.invoiceController.saveStatus([falseInvoice], res.status.status,idGroup);
                         break;
                     }
 
                 }
-                ;
+
+            }
+        }
+        if (listOperation[0].status.status.indexOf('sepa') === -1 && listOperation[0].status.status !== 'cancel_dom' && listOperation[0].status.status !== 'new_payment') {
+        switch (listOperation[0].status.status) {
+            case 'notsend_invoice': {
+                await this.invoiceController.saveStatus(listInvoiceToUpdate, listOperation[0].status.status);
+                resultTmp = {
+                    sendStatus: 'notsend'
+                };
+
+                break;
+            }
+           /* case "RAPPEL_SEND": {
                 if (!result) {
-                    result = [resultTmp];
+                    result = [{
+                        nbRappel: +res.more_information
+                    }];
 
                 } else {
-                    result.push(resultTmp);
+                    result.push({
+                        nbRappel: +res.more_information
+                    });
                 }
+                break;
             }
+            case "SEPA_SUBMITTED": {
+                if (!result) {
+                    result = [{
+                        nbSepaSubmit: +res.more_information
+                    }];
+
+                } else {
+                    result.push({
+                        nbSepaSubmit: +res.more_information
+                    });
+                }
+                break;
+            }
+            case "OPEN": {
+                let falseInvoice = new Invoices();
+                falseInvoice.invoice_ref = res.invoice_reference;
+                await this.invoiceController.saveStatus([falseInvoice], 'unpayed');
+                if (!result) {
+                    result = {
+                        'payed': 0,
+                        'status': 'unpayed'
+                    };
+                }
+                break;
+            }*/
+            default: {
+                let falseInvoice = new Invoices();
+                falseInvoice.invoice_ref = listOperation[0].invoice_reference;
+                resultTmp = await this.invoiceController.saveStatus(listInvoiceToUpdate, listOperation[0].status.status, idGroup);
+                break;
+            }
+
+         }
+            result = []
+            listOperation.forEach(()=>{
+                result.push(resultTmp);
+            });
         }
        return result;
     }
@@ -178,7 +169,6 @@ export class OperationsWorkflowController {
         }
         request.invoice_type = invoiceType;
         request = await this.operationService.saveRequest(request);
-        console.log(request);
         return request;
     }
 
@@ -214,11 +204,4 @@ export class OperationsWorkflowController {
         }
         return operation;
     }
-
-
-
-
-
-
-
 }

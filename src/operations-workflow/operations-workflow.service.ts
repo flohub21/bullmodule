@@ -44,7 +44,7 @@ export class OperationsWorkflowService extends RequestService{
                     " LEFT JOIN  payments_list p ON p.operation_id = op.id" +
                     " WHERE invoice_reference = '"+invoice_ref+"'"+
                     " ORDER BY op.date ASC, op.created_at ASC ";
-        console.log(req);
+        //console.log(req);
 
        return this.repOperation.query(req);
     }
@@ -64,7 +64,7 @@ export class OperationsWorkflowService extends RequestService{
                 " WHERE status_id = "+operation.status_id+" " +
                 " AND invoice_reference = '"+operation.invoice_reference+"'";
 
-            console.log(req);
+            //console.log(req);
 
            this.repOperation.query(req).then((rs)=>{
               resolve(rs);

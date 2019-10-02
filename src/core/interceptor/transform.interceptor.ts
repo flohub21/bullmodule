@@ -15,9 +15,9 @@ export class TransformInterceptor<T> implements NestInterceptor<T, Response<T>> 
     intercept(context: ExecutionContext, next: CallHandler): Observable<Response<any>> {
 
         return next.handle().pipe(map((result) => {
-          /* console.log('----------------------------');
-            console.log(result);
-            console.log('transform interceptor end ');*/
+           //console.log('----------------------------');
+            //console.log(result);
+            //console.log('transform interceptor end ');
                 return {
                     ok:true,
                     result: result

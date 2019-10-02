@@ -16,10 +16,7 @@ export class PaymentsListController {
         body.payment.payment_type = "Payment";
         body.payment.payment_method = null;
         let openAmount = await this.getTotalOpenAmount(body.payment.invoice_ref);
-        console.log('open amount : ' + openAmount);
-        console.log('amount paid : ' +body.payment.amount_paid);
         body.payment.new_balance = +(openAmount - (+body.payment.amount_paid)).toFixed(2);
-        console.log('new balance : ' +body.payment.new_balance);
         await this.paymentsListService.save(body.payment);
         let result: any = {
             openAmount : body.payment.new_balance
