@@ -49,7 +49,7 @@ export class OperationsWorkflowController {
     @Post('create')
     async create(@Body() body) {
         let listOperation: Operations_workflow[] = body.operation;
-        let result: any;
+        let result: any = [];
         let idGroup: number;
         let resultTmp: any;
         if(listOperation[0].status.status === "group"){
@@ -77,17 +77,15 @@ export class OperationsWorkflowController {
                     case "new_payment": {
                         let payment = this.paymentController.getPaymentList(res.invoice_reference, body.payment, res.internal_comment, +res.id);
                         resultTmp = await this.paymentController.create({payment: payment});
-                        if (!result) {
-                            result = [resultTmp];
-
-                        } else {
-                            result.push(resultTmp);
-                        }
+                        resultTmp.listOperation = [res];
+                        result.push(resultTmp);
                         break;
                     }
-
                 }
-
+            } else {
+                result.push({
+                    listOperation: [res]
+                });
             }
         }
         if (listOperation[0].status.status.indexOf('sepa') === -1 && listOperation[0].status.status !== 'cancel_dom' && listOperation[0].status.status !== 'new_payment') {
@@ -146,9 +144,10 @@ export class OperationsWorkflowController {
             }
 
          }
-            result = []
-            listOperation.forEach(()=>{
+            listOperation.forEach((op)=>{
+                resultTmp.listOperation = [op];
                 result.push(resultTmp);
+
             });
         }
        return result;
