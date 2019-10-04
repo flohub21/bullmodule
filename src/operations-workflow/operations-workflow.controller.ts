@@ -29,6 +29,8 @@ export class OperationsWorkflowController {
     /**
      * create the operation for all invoice find by filter
      * @param body any
+     * @return invoice object which can be have only key which are in a invoice object
+     *         It contains the change of invoice after the saving in the DB
      */
     @Post('create_by_filter')
     async createByFilter(@Body() body){
@@ -59,7 +61,7 @@ export class OperationsWorkflowController {
         for (let key in listOperation) {
             listOperation[key].user_id = listOperation[key].user.id;
             listOperation[key].status_id = listOperation[key].status.id;
-            if (listOperation[key].status.status === 'GENERATE_CREDIT_NOTE_ANULATION' || listOperation[key].status.status === 'GENERATE_CREDIT_NOTE_REFUND') {
+            if (listOperation[key].status.status === 'credit_note' || listOperation[key].status.status === 'GENERATE_CREDIT_NOTE_REFUND') {
                 let request = await this.saveRequest(listOperation[key], 'ANULATION');
                 listOperation[key].request_id = request.id;
             }
@@ -88,7 +90,7 @@ export class OperationsWorkflowController {
                 });
             }
         }
-        if (listOperation[0].status.status.indexOf('sepa') === -1 && listOperation[0].status.status !== 'cancel_dom' && listOperation[0].status.status !== 'new_payment') {
+        if (listOperation[0].status.status.indexOf('sepa') === -1 && listOperation[0].status.status !== 'cancel_dom' && listOperation[0].status.status !== 'new_payment' && listOperation[0].status.status !== 'credit_note' ) {
         switch (listOperation[0].status.status) {
             case 'notsend_invoice': {
                 await this.invoiceController.saveStatus(listInvoiceToUpdate, listOperation[0].status.status);
