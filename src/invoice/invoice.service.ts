@@ -8,16 +8,17 @@ import {FilterService} from "../core/service/filter.service";
 @Injectable()
 export class InvoiceService extends RequestService{
     repInvoiceMysql: any;
-    reqSelect= "SELECT *,SUBSTRING(invoice_type,LOCATE( '_', invoice_type)+1) as type," +
+    reqSelect= "SELECT invoices.*,SUBSTRING(invoice_type,LOCATE( '_', invoice_type)+1) as type," +
                " SUBSTRING(invoice_type,1,LOCATE( '_', invoice_type)-1) as energy, " +
-               " concat( customer_num,' ',pod ) as pod_id," +
                " (SELECT new_balance FROM payments_list p WHERE p.invoice_ref = invoices.invoice_ref ORDER BY  p.created_at desc LIMIT 1 ) as openAmount,"+
                " (SELECT COUNT(id) from operations_workflow o where o.invoice_reference = invoices.invoice_ref  and o.status_id = 16) as nbRappel,"+
-               " (SELECT COUNT(id) from operations_workflow o where o.invoice_reference = invoices.invoice_ref  and o.status_id = 17) as nbSepaSubmit"+
+               " (SELECT COUNT(id) from operations_workflow o where o.invoice_reference = invoices.invoice_ref  and o.status_id = 17) as nbSepaSubmit ,"+
+               " cn.credit_note_date, cn.total_credit, cn.credit_note_invoice_ref"+
                " FROM invoices "+
                " LEFT JOIN (select o.date as operationDate, o.internal_comment as operationComment, st.description, st.status, o.id as operationId, o.more_information FROM operations_workflow o" +
-               "                LEFT JOIN  operation_invoices_status st ON o.status_id = st.id) as op ON op.operationId = " +
-               "                (SELECT id from operations_workflow op where op.invoice_reference = invoices.invoice_ref ORDER BY  op.operationDate desc, op.created_at desc LIMIT 1) ";
+                            " LEFT JOIN  operation_invoices_status st ON o.status_id = st.id) as op ON op.operationId = " +
+                            " (SELECT id from operations_workflow op where op.invoice_reference = invoices.invoice_ref ORDER BY  op.operationDate desc, op.created_at desc LIMIT 1) "+
+               " LEFT JOIN credit_notes cn ON cn.invoice_ref = invoices.invoice_ref";
 
     constructor(private filter: FilterService) {
 
@@ -165,7 +166,7 @@ rep.find().then((rs) =>  {
         let req = this.filter.generateRequest(this.reqSelect,data);
 
         return new Promise((resolve, reject) => {
-            //console.log(req);
+            console.log(req);
             this.repInvoiceMysql.query(req).then((listInvoice) => {
              resolve(listInvoice);
             });

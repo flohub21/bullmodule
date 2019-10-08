@@ -313,6 +313,9 @@ export class Invoices {
     @Column()
     id_group: string;
 
+    credit_note_date: string;
+    credit_note_invoice_ref: string;
+    total_credit : number;
     clientName: string;
     canBeModified: boolean = true;
     status: string[];

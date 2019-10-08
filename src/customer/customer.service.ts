@@ -43,7 +43,7 @@ export class CustomerService extends RequestService{
                 INStr = this.getINForSql(listId,key);
             }
             const req = 'select *from business.cm_customer where customer_id IN (' + INStr + ')';
-            console.log(req);
+         //   console.log(req);
             this.managerPostgres.query(req).then((res) => {
                 resolve(res);
             });

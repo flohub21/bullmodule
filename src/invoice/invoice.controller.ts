@@ -236,9 +236,11 @@ export class InvoiceController {
 
     async trtListInvoice(listInvoice: Invoices[], listCustomer: any[] = null){
         let listId = [];
+        let newInvoiceList: Invoices[] = [];
         for(let key in listInvoice){
             let el:any = listInvoice[key];
             listId.push(el.customer_num);
+            newInvoiceList.push(el);
             if(! el.openAmount){
                 el.openAmount = +el.total_price_with_tax;
             }
@@ -253,6 +255,23 @@ export class InvoiceController {
                 op.more_information = el.more_information;
                 el.listOperation = [op];
             }
+            if(el.credit_url){
+                let credit:any = (JSON.parse(JSON.stringify(el)));
+                credit.invoice_sub_type = 'CREDIT_NOTE';
+                credit.created_at = el.credit_note_date;
+                credit.invoice_ref = el.credit_note_invoice_ref;
+                if(el.total_credit && +el.total_credit > 0){
+                    el.total_credit = 0 - (+el.total_credit);
+                }
+                credit.openAmount = el.total_credit;
+                credit.credit_url = el.credit_url;
+                credit.path = el.credit_url;
+                credit.showExpand = false;
+                credit.disabled = true;
+                credit.isCreditNote = true;
+                newInvoiceList.push(credit);
+            }
+
             if(el.draft === 1){
                 el.sendStatus = 'notsend';
             } else {
@@ -273,9 +292,9 @@ export class InvoiceController {
         if(listCustomer === null){
             listCustomer = await this.customerCont.getAllById(listId);
         }
-        listInvoice = this.addCustomerNameToInvoice(listInvoice, listCustomer);
+        newInvoiceList = this.addCustomerNameToInvoice(newInvoiceList, listCustomer);
 
-        return listInvoice;
+        return newInvoiceList;
     }
 
     /**
