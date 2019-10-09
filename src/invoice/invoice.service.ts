@@ -8,11 +8,9 @@ import {FilterService} from "../core/service/filter.service";
 @Injectable()
 export class InvoiceService extends RequestService{
     repInvoiceMysql: any;
-    reqSelect= "SELECT invoices.*,SUBSTRING(invoice_type,LOCATE( '_', invoice_type)+1) as type," +
+    reqSelect= "SELECT invoices.*, op.*, SUBSTRING(invoice_type,LOCATE( '_', invoice_type)+1) as type," +
                " SUBSTRING(invoice_type,1,LOCATE( '_', invoice_type)-1) as energy, " +
                " (SELECT new_balance FROM payments_list p WHERE p.invoice_ref = invoices.invoice_ref ORDER BY  p.created_at desc LIMIT 1 ) as openAmount,"+
-               " (SELECT COUNT(id) from operations_workflow o where o.invoice_reference = invoices.invoice_ref  and o.status_id = 16) as nbRappel,"+
-               " (SELECT COUNT(id) from operations_workflow o where o.invoice_reference = invoices.invoice_ref  and o.status_id = 17) as nbSepaSubmit ,"+
                " cn.credit_note_date, cn.total_credit, cn.credit_note_invoice_ref"+
                " FROM invoices "+
                " LEFT JOIN (select o.date as operationDate, o.internal_comment as operationComment, st.description, st.status, o.id as operationId, o.more_information FROM operations_workflow o" +
@@ -65,8 +63,13 @@ export class InvoiceService extends RequestService{
      * @param payed number status ( 0 | 1)
      */
    updateStatus(ref: string[], data: any): Promise<any> {
-        let req = 'update invoices set '+ data.key+ ' = '+data.value + ' where invoice_ref IN (' + this.getINForSql(ref) + ')';
-        //console.log(req);
+       let req = '';
+        if(data.text){
+            req = "update invoices set "+ data.key+ " = '"+data.value + "' where invoice_ref IN (" + this.getINForSql(ref) + ")";
+        } else {
+            req = 'update invoices set '+ data.key+ ' = '+data.value + ' where invoice_ref IN (' + this.getINForSql(ref) + ')';
+        }
+        console.log(req);
 
         return this.repInvoiceMysql.query(req);
     }
@@ -166,7 +169,7 @@ rep.find().then((rs) =>  {
         let req = this.filter.generateRequest(this.reqSelect,data);
 
         return new Promise((resolve, reject) => {
-            console.log(req);
+          //  console.log(req);
             this.repInvoiceMysql.query(req).then((listInvoice) => {
              resolve(listInvoice);
             });
@@ -204,6 +207,26 @@ rep.find().then((rs) =>  {
                         " LEFT JOIN invoices i ON i.invoice_ref = o.invoice_reference" +
                         " WHERE o.created_at IN (select max(created_at) from operations_workflow  group by invoice_reference) "+
                         " AND o.status_id = "+statusId;
+            this.repInvoiceMysql.query(req).then((res) => {
+                resolve(res);
+            });
+        });
+    }
+
+    getAllInternalAndPaymentMethod(methodPay:string): Promise<Invoices[]> {
+        return new Promise((resolve) => {
+            let req: string;
+
+            if(methodPay === 'TRANSFER' ){
+                req = "SELECT * from invoices where  payment_method = 'Virement bancaire' AND (internal_payment_method = '"+methodPay+"' OR internal_payment_method is NULL)";
+            } else {
+                if(methodPay === 'SEPA'){
+                    req = "SELECT * from invoices where  payment_method = 'Prélèvement automatique' AND (internal_payment_method = '"+methodPay+"' OR internal_payment_method is NULL)";
+                } else {
+                    req = "SELECT * from invoices where internal_payment_method = '"+methodPay+"'";
+                }
+            }
+            console.log(req);
             this.repInvoiceMysql.query(req).then((res) => {
                 resolve(res);
             });

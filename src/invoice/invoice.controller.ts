@@ -94,6 +94,49 @@ export class InvoiceController {
                     value: idGroup
                 };
                 break;
+            case 'group':
+                data = {
+                    key:'id_group',
+                    value: idGroup
+                };
+                break;
+            case 'pay_direct_debit':
+                data = {
+                    key:'internal_payment_method',
+                    value: 'SEPA',
+                    text:true
+                };
+                break;
+            case 'pay_bank_transfer':
+                data = {
+                    key:'internal_payment_method',
+                    value: 'TRANSFER',
+                    text:true
+                };
+                break;
+            case 'pay_beki':
+                data = {
+                    key:'internal_payment_method',
+                    value: 'BEKI',
+                    text:true
+                };
+                break;
+            case 'pay_cash':
+                data = {
+                    key:'internal_payment_method',
+                    value: 'CASH',
+                    text:true
+                };
+                break;
+            case 'pay_multi':
+                data = {
+                    key:'internal_payment_method',
+                    value: 'MULTI',
+                    text:true
+                };
+                break;
+
+
         }
         return new Promise((resolve) => {
             this.invoiceService.updateStatus(ref, data).then((res)=>{
@@ -127,7 +170,7 @@ export class InvoiceController {
     @Post('find_filter')
     async findByFilter(@Body() body){
         let listCustomer;
-
+        let listId = [];
         if(body.filter.customer !== undefined){
             // if value is an array = multiple pod
             if(typeof body.filter.customer.value !== 'string'){
@@ -138,13 +181,13 @@ export class InvoiceController {
             }
 
             if(listCustomer.length > 0) {
-                let listId = [];
+                let listIdCust = [];
                 listCustomer.forEach((el) => {
-                    listId.push(el.customer_id);
+                    listIdCust.push(el.customer_id);
                 });
                 body.filter.customer_num = {
                     "operator" : "IN",
-                    "value":listId
+                    "value":listIdCust
                 };
             } else {
                 throw new NoResultException();
@@ -154,14 +197,21 @@ export class InvoiceController {
         if(body.filter.operation !== undefined){
             let listInvoice = await this.invoiceService.getAllByOperation(body.filter.operation.value);
             if(listInvoice.length > 0) {
-                let listId = [];
                 listInvoice.forEach((el) => {
                     listId.push(el.id);
                 });
-                body.filter.id = {
-                    "operator" : "IN",
-                    "value":listId
-                };
+            } else {
+                throw new NoResultException();
+            }
+        }
+
+        if(body.filter.method_payment !== undefined){
+
+            let listInvoice = await this.invoiceService.getAllInternalAndPaymentMethod(body.filter.method_payment.value);
+            if(listInvoice.length > 0) {
+                listInvoice.forEach((el) => {
+                    listId.push(el.id);
+                });
             } else {
                 throw new NoResultException();
             }
@@ -201,7 +251,15 @@ export class InvoiceController {
                 body.filter.total_price_with_tax.value = "0";
             }
         }
+        if(listId.length > 0){
+            body.filter.id = {
+                "operator" : "IN",
+                "value":listId
+            };
+        }
+        console.log('find by filter start : ' +moment().format('hh:mm:ss'));
         let listInvoice = await this.invoiceService.findByFilter(body.filter);
+        console.log('find by filter end : ' +moment().format('hh:mm:ss'));
         if(body.filter.open !== undefined) {
             let lst: Invoices[] = [];
             listInvoice.forEach((invoice) => {
@@ -218,6 +276,7 @@ export class InvoiceController {
             listInvoice = lst;
         }
         if(listInvoice.length > 0) {
+            console.log(' start trt list invoice : ' +moment().format('hh:mm:ss'));
            listInvoice = await this.trtListInvoice(listInvoice,listCustomer);
         } else {
             throw new NoResultException();
@@ -284,7 +343,14 @@ export class InvoiceController {
             if(el.period_start && el.period_start.indexOf('/') !== -1){
                 el.period_start = moment(el.period_start, 'DD/MM/YYYY').format('YYYY-MM-DD');
             }
-            if(el.internal_payment_method){
+            if(!el.internal_payment_method){
+                if(el.payment_method === 'Virement bancaire'){
+                    el.internal_payment_method = 'TRANSFER';
+                }
+                else{
+                    el.internal_payment_method = 'SEPA';
+                }
+
 
             }
 
@@ -292,7 +358,9 @@ export class InvoiceController {
         if(listCustomer === null){
             listCustomer = await this.customerCont.getAllById(listId);
         }
+        console.log('end trt list invoice && start add customter : ' +moment().format('hh:mm:ss'));
         newInvoiceList = this.addCustomerNameToInvoice(newInvoiceList, listCustomer);
+        console.log('end add customter : ' +moment().format('hh:mm:ss'));
 
         return newInvoiceList;
     }
