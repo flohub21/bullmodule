@@ -165,7 +165,6 @@ rep.find().then((rs) =>  {
     }
 
    findByFilter(data: any): Promise<Invoices[]>{
-        //console.log('generate Request');
         let req = this.filter.generateRequest(this.reqSelect,data);
 
         return new Promise((resolve, reject) => {

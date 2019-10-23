@@ -174,7 +174,6 @@ export class InvoiceController {
         if(body.filter.customer !== undefined){
             // if value is an array = multiple pod
             if(typeof body.filter.customer.value !== 'string'){
-                console.log('array');
                 listCustomer = await this.customerCont.getAllByPod({pod: body.filter.customer.value});
             } else {
                 listCustomer = await this.customerCont.getAllByAll({str: body.filter.customer.value});
@@ -257,9 +256,7 @@ export class InvoiceController {
                 "value":listId
             };
         }
-        console.log('find by filter start : ' +moment().format('hh:mm:ss'));
         let listInvoice = await this.invoiceService.findByFilter(body.filter);
-        console.log('find by filter end : ' +moment().format('hh:mm:ss'));
         if(body.filter.open !== undefined) {
             let lst: Invoices[] = [];
             listInvoice.forEach((invoice) => {
@@ -276,7 +273,6 @@ export class InvoiceController {
             listInvoice = lst;
         }
         if(listInvoice.length > 0) {
-            console.log(' start trt list invoice : ' +moment().format('hh:mm:ss'));
            listInvoice = await this.trtListInvoice(listInvoice,listCustomer);
         } else {
             throw new NoResultException();
@@ -319,15 +315,16 @@ export class InvoiceController {
                 credit.invoice_sub_type = 'CREDIT_NOTE';
                 credit.created_at = el.credit_note_date;
                 credit.invoice_ref = el.credit_note_invoice_ref;
-                if(el.total_credit && +el.total_credit > 0){
+                /*if(el.total_credit && +el.total_credit > 0){
                     el.total_credit = 0 - (+el.total_credit);
-                }
+                }*/
                 credit.openAmount = el.total_credit;
                 credit.credit_url = el.credit_url;
                 credit.path = el.credit_url;
                 credit.showExpand = false;
                 credit.disabled = true;
                 credit.isCreditNote = true;
+                credit.invoiceForCreditNote = el;
                 newInvoiceList.push(credit);
             }
 
@@ -353,14 +350,11 @@ export class InvoiceController {
 
 
             }
-
         }
         if(listCustomer === null){
             listCustomer = await this.customerCont.getAllById(listId);
         }
-        console.log('end trt list invoice && start add customter : ' +moment().format('hh:mm:ss'));
         newInvoiceList = this.addCustomerNameToInvoice(newInvoiceList, listCustomer);
-        console.log('end add customter : ' +moment().format('hh:mm:ss'));
 
         return newInvoiceList;
     }
