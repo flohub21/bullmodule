@@ -341,6 +341,9 @@ export class InvoiceController {
             if(el.period_start && el.period_start.indexOf('/') !== -1){
                 el.period_start = moment(el.period_start, 'DD/MM/YYYY').format('YYYY-MM-DD');
             }
+            if(el.period_finish && el.period_finish.indexOf('/') !== -1){
+                el.period_finish = moment(el.period_finish, 'DD/MM/YYYY').format('YYYY-MM-DD');
+            }
             if(!el.internal_payment_method){
                 if(el.payment_method === 'Virement bancaire'){
                     el.internal_payment_method = 'TRANSFER';
@@ -348,8 +351,6 @@ export class InvoiceController {
                 else{
                     el.internal_payment_method = 'SEPA';
                 }
-
-
             }
         }
         if(listCustomer === null){
