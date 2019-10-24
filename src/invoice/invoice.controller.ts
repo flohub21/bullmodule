@@ -88,16 +88,17 @@ export class InvoiceController {
                     value :'1'
                 };
                 break;
-            case 'group':
+            case 'split':
                 data = {
                     key:'id_group',
-                    value: idGroup
+                    value: null
                 };
                 break;
             case 'group':
                 data = {
                     key:'id_group',
                     value: idGroup
+
                 };
                 break;
             case 'pay_direct_debit':
