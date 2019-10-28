@@ -244,7 +244,7 @@ export class InvoiceController {
             }
         }
 
-        if(body.filter.method_payment !== undefined){
+       /* if(body.filter.method_payment !== undefined){
 
             let listInvoice = await this.invoiceService.getAllInternalAndPaymentMethod(body.filter.method_payment.value);
             if(listInvoice.length > 0) {
@@ -254,7 +254,7 @@ export class InvoiceController {
             } else {
                 throw new NoResultException();
             }
-        }
+        }*/
 
         if(body.filter.open != undefined) {
             body.filter.payed = {};
@@ -382,13 +382,11 @@ export class InvoiceController {
             if(el.period_finish && el.period_finish.indexOf('/') !== -1){
                 el.period_finish = moment(el.period_finish, 'DD/MM/YYYY').format('YYYY-MM-DD');
             }
-            if(!el.internal_payment_method){
-                if(el.payment_method === 'Virement bancaire'){
-                    el.internal_payment_method = 'TRANSFER';
-                }
-                else{
-                    el.internal_payment_method = 'SEPA';
-                }
+            if(el.payment_method === 'Virement bancaire'){
+                el.payment_method = 'TRANSFER';
+            }
+            else{
+                el.payment_method = 'SEPA';
             }
         }
         if(listCustomer === null){
