@@ -44,8 +44,9 @@ export class InvoiceController {
      * @param invoices
      * @param status
      * @param idGroup
+     * @param value
      */
-    saveStatus(invoices: Invoices[],status:string, idGroup: number = null){
+    saveStatus(invoices: Invoices[],status:string, idGroup: number = null, value:any = null){
         let ref = [];
         let data:any;
         invoices.forEach((invoice) => {
@@ -136,6 +137,13 @@ export class InvoiceController {
                     text:true
                 };
                 break;
+            case 'internal_payment_date':
+                data = {
+                    key:'internal_payment_date',
+                    value: value,
+                    text:true
+                };
+                break;
 
 
         }
@@ -145,6 +153,37 @@ export class InvoiceController {
                ret[data.key] = data.value;
                resolve(ret);
             });
+        });
+    }
+
+    /**
+     * save payment method
+     * @param data any data containing the invoice reference
+     */
+    async savePaymentMethod(data: any){
+        return new Promise((resolve)=>{
+            this.find(data.invoice_ref).then((invoice: Invoices)=>{
+                let method: string;
+                if(invoice.payment_method === "Virement bancaire"){
+                    method = "TRANSFER";
+                } else {
+                    method = "SEPA"
+                }
+                let d =  {
+                    key:'internal_payment_method',
+                    value: method,
+                    text:true
+                };
+                this.invoiceService.updateStatus([data.invoice_ref], d).then((res)=>{
+                    let ret:any = {};
+                    ret[d.key] = d.value;
+                    console.log('***');
+                    console.log(ret);
+                    console.log('***');
+                    resolve(ret);
+                });
+            })
+
         });
     }
 
@@ -325,7 +364,6 @@ export class InvoiceController {
                 credit.showExpand = false;
                 credit.disabled = true;
                 credit.isCreditNote = true;
-                credit.invoiceForCreditNote = el;
                 newInvoiceList.push(credit);
             }
 

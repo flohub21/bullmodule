@@ -61,6 +61,7 @@ export class OperationsWorkflowController {
         for (let key in listOperation) {
             listOperation[key].user_id = listOperation[key].user.id;
             listOperation[key].status_id = listOperation[key].status.id;
+
             if (listOperation[key].status.status === 'credit_note' || listOperation[key].status.status === 'GENERATE_CREDIT_NOTE_REFUND') {
                 let request = await this.saveRequest(listOperation[key], 'ANULATION');
                 listOperation[key].request_id = request.id;
@@ -77,9 +78,9 @@ export class OperationsWorkflowController {
             if (res.status.status.indexOf('sepa') === -1 && res.status.status !== 'cancel_dom') {
                 switch (res.status.status) {
                     case "new_payment": {
-                        let payment = this.paymentController.getPaymentList(res.invoice_reference, body.payment, res.internal_comment, +res.id);
+                        let payment:any = this.paymentController.getPaymentList(res.invoice_reference, body.payment, res.internal_comment, +res.id);
+                        payment.paymentMethod = listOperation[0].more_information;
                         resultTmp = await this.paymentController.create({payment: payment});
-                        resultTmp.listOperation = [res];
                         result.push(resultTmp);
                         break;
                     }
@@ -98,6 +99,23 @@ export class OperationsWorkflowController {
                     sendStatus: 'notsend'
                 };
 
+                break;
+            }
+            case 'payed_invoice': {
+                await this.invoiceController.saveStatus(listInvoiceToUpdate, listOperation[0].status.status);
+                await this.invoiceController.saveStatus(listInvoiceToUpdate, 'internal_payment_date',null, listOperation[0].date);
+                let resPayment;
+                if(listOperation[0].more_information){
+                    resPayment = await this.invoiceController.saveStatus(listInvoiceToUpdate, listOperation[0].more_information);
+                } else {
+                    resPayment = await this.invoiceController.savePaymentMethod(listInvoiceToUpdate[0]);
+                }
+
+                resultTmp = {
+                    payed: '1',
+                    internal_payment_date:listOperation[0].date,
+                    internal_payment_method: resPayment['internal_payment_method']
+                };
                 break;
             }
            /* case "RAPPEL_SEND": {
