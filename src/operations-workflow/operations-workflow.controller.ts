@@ -80,6 +80,9 @@ export class OperationsWorkflowController {
                     case "new_payment": {
                         let payment:any = this.paymentController.getPaymentList(res.invoice_reference, body.payment, res.internal_comment, +res.id);
                         payment.paymentMethod = listOperation[0].more_information;
+                        console.log(listOperation[0]);
+                        payment.date = listOperation[0].date;
+
                         resultTmp = await this.paymentController.create({payment: payment});
                         result.push(resultTmp);
                         break;

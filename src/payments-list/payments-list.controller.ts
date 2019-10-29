@@ -26,6 +26,7 @@ export class PaymentsListController {
             falseInvoice[0] = new Invoices();
             falseInvoice[0].invoice_ref = body.payment.invoice_ref;
            await this.invoiceController.saveStatus(falseInvoice,'payed_invoice');
+            await this.invoiceController.saveStatus(falseInvoice, 'internal_payment_date',null, body.payment.date);
 
            // save internal payment method
            let res;
@@ -38,6 +39,7 @@ export class PaymentsListController {
            result.payed = '1';
            result.status = 'payed';
            result.internal_payment_method = res['internal_payment_method'];
+           result.internal_payment_date = body.payment.date;
         }
         return result;
     }
