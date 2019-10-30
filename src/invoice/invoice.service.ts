@@ -15,7 +15,7 @@ export class InvoiceService extends RequestService{
                " FROM invoices "+
                " LEFT JOIN (select o.date as operationDate, o.internal_comment as operationComment, st.description, st.status, o.id as operationId, o.more_information FROM operations_workflow o" +
                             " LEFT JOIN  operation_invoices_status st ON o.status_id = st.id) as op ON op.operationId = " +
-                            " (SELECT id from operations_workflow op where op.invoice_reference = invoices.invoice_ref ORDER BY  op.operationDate desc, op.created_at desc LIMIT 1) "+
+                            " (SELECT id from operations_workflow op where op.invoice_reference = invoices.invoice_ref ORDER BY  op.updated_at desc, op.operationDate desc LIMIT 1) "+
                " LEFT JOIN credit_notes cn ON cn.invoice_ref = invoices.invoice_ref";
 
     constructor(private filter: FilterService) {

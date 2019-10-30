@@ -259,11 +259,15 @@ export class OperationsWorkflowController {
 
         let operation: Operations_workflow[] = [];
         let  res = await this.operationService.getAllByInvoice(body.invoice_ref);
+        console.log('result : ');
+        console.log(res);
         for(let r of res){
             let user = await this.userController.findOne({id:r.user_id});
             let op = await Operations_workflow.prototype.getOperation(r,user );
             operation.push(op);
         }
+        console.log('operation : ');
+        console.log(operation);
         return operation;
     }
 }
