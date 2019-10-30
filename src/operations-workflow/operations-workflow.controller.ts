@@ -27,7 +27,7 @@ export class OperationsWorkflowController {
     }
 
     /**
-     * create the operation for all invoice find by filter
+     * create the operation for all invoice found by filter
      * @param body any
      * @return invoice object which can be have only key which are in a invoice object
      *         It contains the change of invoice after the saving in the DB
@@ -35,11 +35,13 @@ export class OperationsWorkflowController {
     @Post('create_by_filter')
     async createByFilter(@Body() body){
         let listInvoice: Invoices[] = await this.invoiceController.findByFilter(body.filter);
+           body.invoiceComment = [];
             let listOperation: Operations_workflow[] = [];
             listInvoice.forEach((invoice)=>{
                 let op: Operations_workflow = JSON.parse(JSON.stringify(body.operation[0]));
                 op.invoice_reference = invoice.invoice_ref;
                 listOperation.push(op);
+                body.invoiceComment.push(invoice.note);
             });
             body.operation = listOperation;
             return await  this.create(body);
@@ -84,6 +86,19 @@ export class OperationsWorkflowController {
                         payment.date = listOperation[0].date;
 
                         resultTmp = await this.paymentController.create({payment: payment});
+                        resultTmp.listOperation = [res];
+                        result.push(resultTmp);
+                        break;
+                    }
+                    case 'add_comment':{
+                        let comment: string;
+                        if(listOperation.length === 1 || ! body.invoiceComment[key]){
+                            comment = listOperation[0].internal_comment;
+                        } else {
+                            comment = body.invoiceComment[key] + ' - ' + listOperation[0].internal_comment;
+                        }
+                        resultTmp = await this.invoiceController.saveStatus([falseInvoice], 'add_comment',null, comment);
+                        resultTmp.listOperation = [res];
                         result.push(resultTmp);
                         break;
                     }
@@ -94,7 +109,8 @@ export class OperationsWorkflowController {
                 });
             }
         }
-        if (listOperation[0].status.status.indexOf('sepa') === -1 && listOperation[0].status.status !== 'cancel_dom' && listOperation[0].status.status !== 'new_payment' && listOperation[0].status.status !== 'credit_note' ) {
+        if (listOperation[0].status.status.indexOf('sepa') === -1 && listOperation[0].status.status !== 'cancel_dom' && listOperation[0].status.status !== 'new_payment'
+            && listOperation[0].status.status !== 'credit_note' && listOperation[0].status.status !== 'add_comment' ) {
         switch (listOperation[0].status.status) {
             case 'notsend_invoice': {
                 await this.invoiceController.saveStatus(listInvoiceToUpdate, listOperation[0].status.status);
@@ -121,6 +137,23 @@ export class OperationsWorkflowController {
                 };
                 break;
             }
+            case 'unpayed_invoice':{
+                resultTmp = await this.invoiceController.saveStatus(listInvoiceToUpdate, listOperation[0].status.status);
+                await this.invoiceController.saveStatus(listInvoiceToUpdate, 'internal_payment_date',null, null);
+                await this.invoiceController.saveStatus(listInvoiceToUpdate, 'internal_payment_method',null, null);
+                resultTmp.internal_payment_date = null;
+                resultTmp.internal_payment_method = null;
+
+                break;
+
+            }
+
+            case 'change_payment_date':{
+                resultTmp = await this.invoiceController.saveStatus(listInvoiceToUpdate, 'internal_payment_date',null, listOperation[0].date);
+                break;
+            }
+
+
            /* case "RAPPEL_SEND": {
                 if (!result) {
                     result = [{
@@ -176,6 +209,13 @@ export class OperationsWorkflowController {
        return result;
     }
 
+    /**
+     * save a record in the request table
+     * @param operation Operations_workflow The operation for which a record is created
+     * @param invoiceType string
+     *
+     * @return any the request created
+     */
     async saveRequest(operation: Operations_workflow, invoiceType: string)
     {
         let request: Request = new Request();

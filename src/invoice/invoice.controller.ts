@@ -141,10 +141,23 @@ export class InvoiceController {
                 data = {
                     key:'internal_payment_date',
                     value: value,
+                    text: value !== null ? true : false
+                };
+
+                break;
+            case 'internal_payment_method':
+                data = {
+                    key:'internal_payment_method',
+                    value: value,
+                };
+            case 'add_comment':
+                data = {
+                    key:'note',
+                    value: value,
                     text:true
                 };
-                break;
 
+                break;
 
         }
         return new Promise((resolve) => {
@@ -177,9 +190,6 @@ export class InvoiceController {
                 this.invoiceService.updateStatus([data.invoice_ref], d).then((res)=>{
                     let ret:any = {};
                     ret[d.key] = d.value;
-                    console.log('***');
-                    console.log(ret);
-                    console.log('***');
                     resolve(ret);
                 });
             })

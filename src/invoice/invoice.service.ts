@@ -74,9 +74,6 @@ export class InvoiceService extends RequestService{
         return this.repInvoiceMysql.query(req);
     }
 
-    /*let rep = connection.getRepository(Invoices);
-rep.find().then((rs) =>  {
-});*/
     /**
      * find all invoices
      * @return Promise<Invoices[]>
