@@ -76,7 +76,7 @@ export class OperationsWorkflowController {
             let falseInvoice = new Invoices();
             falseInvoice.invoice_ref = res.invoice_reference;
             listInvoiceToUpdate.push(falseInvoice);
-
+            // save different thing for each invoice ( it depends the state of each invoice)
             if (res.status.status.indexOf('SEPA_') === -1 && res.status.status !== 'CANCEL_DOM') {
                 switch (res.status.status) {
                     case "NEW_PAYMENT": {
@@ -107,17 +107,12 @@ export class OperationsWorkflowController {
                 });
             }
         }
+
+        // save the same thing in all invoice
         if (listOperation[0].status.status.indexOf('SEPA_') === -1 && listOperation[0].status.status !== 'CANCEL_DOM' && listOperation[0].status.status !== 'NEW_PAYMENT'
             && listOperation[0].status.status !== 'CREDIT_NOTE' && listOperation[0].status.status !== 'ADD_COMMENT' ) {
         switch (listOperation[0].status.status) {
-            case 'NOTSEND_INVOICE': {
-                await this.invoiceController.saveStatus(listInvoiceToUpdate, listOperation[0].status.status);
-                resultTmp = {
-                    sendStatus: 'notsend'
-                };
 
-                break;
-            }
             case 'PAYED_INVOICE': {
                 await this.invoiceController.saveStatus(listInvoiceToUpdate, listOperation[0].status.status);
                 await this.invoiceController.saveStatus(listInvoiceToUpdate, 'internal_payment_date',null, listOperation[0].date);
@@ -151,6 +146,39 @@ export class OperationsWorkflowController {
                 break;
             }
 
+            case 'NOT_SEND':{
+                await this.invoiceController.saveStatus(listInvoiceToUpdate, 'NOT_SEND',null);
+                await this.invoiceController.saveStatus(listInvoiceToUpdate, 'send_status',null, 'NOT_SEND');
+                resultTmp = {
+                    draft : 1,
+                    send_status : 'NOT_SEND'
+                };
+                break;
+
+            }
+            case 'SEND_EMAIL':
+            case 'SEND_POST':
+            case 'SEND_ALL': {
+                let sendStatus: string;
+                if(listOperation[0].status.status === 'SEND_EMAIL'){
+                    sendStatus = 'EMAIL';
+                } else {
+                    if(listOperation[0].status.status === 'SEND_POST') {
+                        sendStatus = 'POST';
+                    }
+                     else{
+                         sendStatus = 'ALL';
+                    }
+                }
+                await this.invoiceController.saveStatus(listInvoiceToUpdate, 'SEND',null);
+                await this.invoiceController.saveStatus(listInvoiceToUpdate, 'send_status',null,sendStatus);
+                resultTmp = {
+                    draft : 0,
+                    send_status : sendStatus
+                };
+                break;
+
+            }
 
            /* case "RAPPEL_SEND": {
                 if (!result) {

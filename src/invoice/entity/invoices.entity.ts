@@ -313,6 +313,9 @@ export class Invoices {
     @Column()
     id_group: string;
 
+    @Column()
+    send_status: string;
+
     credit_note_date: string;
     credit_note_invoice_ref: string;
     total_credit : number;
@@ -325,7 +328,6 @@ export class Invoices {
     nbRappel:number = 0;
     nbSepaSubmit:number = 0;
     listOperation: Operations_workflow[];
-    sendStatus: string;
 
 
 }

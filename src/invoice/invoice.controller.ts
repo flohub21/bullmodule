@@ -59,42 +59,49 @@ export class InvoiceController {
                     value: '0'
                 };
                 break;
+
             case 'CANCEL_INVOICE':
                 data = {
                     key:'canceled',
                     value: '1'
                 };
                 break;
+
             case 'PAYED_INVOICE':
                 data = {
                     key:'payed',
                     value: '1'
                 };
                 break;
+
             case 'UNPAYED_INVOICE':
                 data = {
                     key:'payed',
                     value: '0'
                 };
                 break;
-            case 'SEND_INVOICE' :
+
+            case 'SEND' :
                 data ={
                     key : 'draft',
                     value :'0'
                 };
                 break;
-            case 'NOTSEND_INVOICE' :
+
+            case 'NOT_SEND' :
                 data ={
                     key : 'draft',
                     value :'1'
                 };
                 break;
+
             case 'SPLIT':
                 data = {
                     key:'id_group',
                     value: null
                 };
                 break;
+
             case 'GROUP':
                 data = {
                     key:'id_group',
@@ -102,6 +109,7 @@ export class InvoiceController {
 
                 };
                 break;
+
             case 'SEPA':
                 data = {
                     key:'internal_payment_method',
@@ -109,6 +117,7 @@ export class InvoiceController {
                     text:true
                 };
                 break;
+
             case 'TRANSFER':
                 data = {
                     key:'internal_payment_method',
@@ -116,6 +125,7 @@ export class InvoiceController {
                     text:true
                 };
                 break;
+
             case 'BEKI':
                 data = {
                     key:'internal_payment_method',
@@ -123,6 +133,7 @@ export class InvoiceController {
                     text:true
                 };
                 break;
+
             case 'CASH':
                 data = {
                     key:'internal_payment_method',
@@ -130,6 +141,7 @@ export class InvoiceController {
                     text:true
                 };
                 break;
+
             case 'MULTI':
                 data = {
                     key:'internal_payment_method',
@@ -137,6 +149,7 @@ export class InvoiceController {
                     text:true
                 };
                 break;
+
             case 'internal_payment_date':
                 data = {
                     key:'internal_payment_date',
@@ -145,19 +158,30 @@ export class InvoiceController {
                 };
 
                 break;
-            case 'internal_payment_method':
-                data = {
-                    key:'internal_payment_method',
-                    value: value,
-                };
+
             case 'ADD_COMMENT':
                 data = {
                     key:'note',
                     value: value,
                     text:true
                 };
-
                 break;
+
+            case 'send_status':
+                data = {
+                    key:'send_status',
+                    value: value,
+                    text:true
+                };
+                break;
+
+            default:
+                data = {
+                    key: status,
+                    value: value
+                };
+                break;
+
 
         }
         return new Promise((resolve) => {
@@ -377,16 +401,6 @@ export class InvoiceController {
                 credit.disabled = true;
                 credit.isCreditNote = true;
                 newInvoiceList.push(credit);
-            }
-
-            if(el.draft === 1){
-                el.sendStatus = 'notsend';
-            } else {
-                if(el.send_out_email !== null){
-                    el.sendStatus = 'email';
-                } else {
-                    el.sendStatus = 'post';
-                }
             }
             if(el.period_start && el.period_start.indexOf('/') !== -1){
                 el.period_start = moment(el.period_start, 'DD/MM/YYYY').format('YYYY-MM-DD');
