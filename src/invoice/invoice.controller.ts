@@ -53,84 +53,84 @@ export class InvoiceController {
             ref.push(invoice.invoice_ref);
         });
         switch (status) {
-            case 'valid_invoice':
+            case 'VALID_INVOICE':
                 data = {
                     key:'canceled',
                     value: '0'
                 };
                 break;
-            case 'cancel_invoice':
+            case 'CANCEL_INVOICE':
                 data = {
                     key:'canceled',
                     value: '1'
                 };
                 break;
-            case 'payed_invoice':
+            case 'PAYED_INVOICE':
                 data = {
                     key:'payed',
                     value: '1'
                 };
                 break;
-            case 'unpayed_invoice':
+            case 'UNPAYED_INVOICE':
                 data = {
                     key:'payed',
                     value: '0'
                 };
                 break;
-            case 'send_invoice' :
+            case 'SEND_INVOICE' :
                 data ={
                     key : 'draft',
                     value :'0'
                 };
                 break;
-            case 'notsend_invoice' :
+            case 'NOTSEND_INVOICE' :
                 data ={
                     key : 'draft',
                     value :'1'
                 };
                 break;
-            case 'split':
+            case 'SPLIT':
                 data = {
                     key:'id_group',
                     value: null
                 };
                 break;
-            case 'group':
+            case 'GROUP':
                 data = {
                     key:'id_group',
                     value: idGroup
 
                 };
                 break;
-            case 'pay_direct_debit':
+            case 'SEPA':
                 data = {
                     key:'internal_payment_method',
                     value: 'SEPA',
                     text:true
                 };
                 break;
-            case 'pay_bank_transfer':
+            case 'TRANSFER':
                 data = {
                     key:'internal_payment_method',
                     value: 'TRANSFER',
                     text:true
                 };
                 break;
-            case 'pay_beki':
+            case 'BEKI':
                 data = {
                     key:'internal_payment_method',
                     value: 'BEKI',
                     text:true
                 };
                 break;
-            case 'pay_cash':
+            case 'CASH':
                 data = {
                     key:'internal_payment_method',
                     value: 'CASH',
                     text:true
                 };
                 break;
-            case 'pay_multi':
+            case 'MULTI':
                 data = {
                     key:'internal_payment_method',
                     value: 'MULTI',
@@ -150,7 +150,7 @@ export class InvoiceController {
                     key:'internal_payment_method',
                     value: value,
                 };
-            case 'add_comment':
+            case 'ADD_COMMENT':
                 data = {
                     key:'note',
                     value: value,
@@ -168,6 +168,8 @@ export class InvoiceController {
             });
         });
     }
+
+
 
     /**
      * save payment method

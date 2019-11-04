@@ -56,7 +56,7 @@ export class OperationsWorkflowController {
         let result: any = [];
         let idGroup: number;
         let resultTmp: any;
-        if(listOperation[0].status.status === "group"){
+        if(listOperation[0].status.status === "GROUP"){
             idGroup = new Date().getTime();
         }
         let listInvoiceToUpdate:Invoices[] = [];
@@ -64,11 +64,11 @@ export class OperationsWorkflowController {
             listOperation[key].user_id = listOperation[key].user.id;
             listOperation[key].status_id = listOperation[key].status.id;
 
-            if (listOperation[key].status.status === 'credit_note' || listOperation[key].status.status === 'GENERATE_CREDIT_NOTE_REFUND') {
+            if (listOperation[key].status.status === 'CREDIT_NOTE' || listOperation[key].status.status === 'GENERATE_CREDIT_NOTE_REFUND') {
                 let request = await this.saveRequest(listOperation[key], 'ANULATION');
                 listOperation[key].request_id = request.id;
             }
-            if (listOperation[key].status.status.indexOf('sepa') !== -1 || listOperation[key].status.status === 'cancel_dom') {
+            if (listOperation[key].status.status.indexOf('SEPA_') !== -1 || listOperation[key].status.status === 'CANCEL_DOM') {
                 let res: any = await this.operationService.getNbSpecialOperation(listOperation[key]);
                 listOperation[key].more_information =  (+res[0].nb + 1) + '';
             }
@@ -77,27 +77,25 @@ export class OperationsWorkflowController {
             falseInvoice.invoice_ref = res.invoice_reference;
             listInvoiceToUpdate.push(falseInvoice);
 
-            if (res.status.status.indexOf('sepa') === -1 && res.status.status !== 'cancel_dom') {
+            if (res.status.status.indexOf('SEPA_') === -1 && res.status.status !== 'CANCEL_DOM') {
                 switch (res.status.status) {
-                    case "new_payment": {
+                    case "NEW_PAYMENT": {
                         let payment:any = this.paymentController.getPaymentList(res.invoice_reference, body.payment, res.internal_comment, +res.id);
-                        payment.paymentMethod = listOperation[0].more_information;
-                        console.log(listOperation[0]);
                         payment.date = listOperation[0].date;
-
+                        payment.payment_method = listOperation[0].more_information;
                         resultTmp = await this.paymentController.create({payment: payment});
                         resultTmp.listOperation = [res];
                         result.push(resultTmp);
                         break;
                     }
-                    case 'add_comment':{
+                    case 'ADD_COMMENT':{
                         let comment: string;
                         if(listOperation.length === 1 || ! body.invoiceComment[key]){
                             comment = listOperation[0].internal_comment;
                         } else {
                             comment = body.invoiceComment[key] + ' - ' + listOperation[0].internal_comment;
                         }
-                        resultTmp = await this.invoiceController.saveStatus([falseInvoice], 'add_comment',null, comment);
+                        resultTmp = await this.invoiceController.saveStatus([falseInvoice], 'ADD_COMMENT',null, comment);
                         resultTmp.listOperation = [res];
                         result.push(resultTmp);
                         break;
@@ -109,10 +107,10 @@ export class OperationsWorkflowController {
                 });
             }
         }
-        if (listOperation[0].status.status.indexOf('sepa') === -1 && listOperation[0].status.status !== 'cancel_dom' && listOperation[0].status.status !== 'new_payment'
-            && listOperation[0].status.status !== 'credit_note' && listOperation[0].status.status !== 'add_comment' ) {
+        if (listOperation[0].status.status.indexOf('SEPA_') === -1 && listOperation[0].status.status !== 'CANCEL_DOM' && listOperation[0].status.status !== 'NEW_PAYMENT'
+            && listOperation[0].status.status !== 'CREDIT_NOTE' && listOperation[0].status.status !== 'ADD_COMMENT' ) {
         switch (listOperation[0].status.status) {
-            case 'notsend_invoice': {
+            case 'NOTSEND_INVOICE': {
                 await this.invoiceController.saveStatus(listInvoiceToUpdate, listOperation[0].status.status);
                 resultTmp = {
                     sendStatus: 'notsend'
@@ -120,7 +118,7 @@ export class OperationsWorkflowController {
 
                 break;
             }
-            case 'payed_invoice': {
+            case 'PAYED_INVOICE': {
                 await this.invoiceController.saveStatus(listInvoiceToUpdate, listOperation[0].status.status);
                 await this.invoiceController.saveStatus(listInvoiceToUpdate, 'internal_payment_date',null, listOperation[0].date);
                 let resPayment;
@@ -137,7 +135,7 @@ export class OperationsWorkflowController {
                 };
                 break;
             }
-            case 'unpayed_invoice':{
+            case 'UNPAYED_INVOICE':{
                 resultTmp = await this.invoiceController.saveStatus(listInvoiceToUpdate, listOperation[0].status.status);
                 await this.invoiceController.saveStatus(listInvoiceToUpdate, 'internal_payment_date',null, null);
                 await this.invoiceController.saveStatus(listInvoiceToUpdate, 'internal_payment_method',null, null);
@@ -148,7 +146,7 @@ export class OperationsWorkflowController {
 
             }
 
-            case 'change_payment_date':{
+            case 'CHANGE_PAYMENT_DATE':{
                 resultTmp = await this.invoiceController.saveStatus(listInvoiceToUpdate, 'internal_payment_date',null, listOperation[0].date);
                 break;
             }

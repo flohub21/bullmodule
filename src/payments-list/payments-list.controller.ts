@@ -14,31 +14,34 @@ export class PaymentsListController {
     async create(@Body() body) {
         body.payment.delete = 0;
         body.payment.payment_type = "Payment";
-        body.payment.payment_method = null;
         let openAmount = await this.getTotalOpenAmount(body.payment.invoice_ref);
         body.payment.new_balance = +(openAmount - (+body.payment.amount_paid)).toFixed(2);
+        let invoice : Invoices;
+        invoice = new Invoices();
+        invoice.invoice_ref = body.payment.invoice_ref;
+        if(!body.payment.payment_method){
+           invoice = await this.invoiceController.find(invoice);
+            if(invoice.payment_method === "Virement bancaire"){
+                body.payment.payment_method  = "TRANSFER";
+            } else {
+                body.payment.payment_method  = "SEPA"
+            }
+        }
         await this.paymentsListService.save(body.payment);
+        console.log(body.payment)
         let result: any = {
             openAmount : body.payment.new_balance
         };
         if(body.payment.new_balance <= 0){
-            let falseInvoice : Invoices[] = [];
-            falseInvoice[0] = new Invoices();
-            falseInvoice[0].invoice_ref = body.payment.invoice_ref;
-           await this.invoiceController.saveStatus(falseInvoice,'payed_invoice');
-            await this.invoiceController.saveStatus(falseInvoice, 'internal_payment_date',null, body.payment.date);
 
-           // save internal payment method
-           let res;
-            if(body.payment.paymentMethod){
-                res= await this.invoiceController.saveStatus(falseInvoice, body.payment.paymentMethod);
-            } else {
-                res = await this.invoiceController.savePaymentMethod(falseInvoice[0]);
-            }
+            await this.invoiceController.saveStatus([invoice],'PAYED_INVOICE');
+            await this.invoiceController.saveStatus([invoice], 'internal_payment_date',null, body.payment.date);
+            await this.invoiceController.saveStatus([invoice], body.payment.payment_method);
+
 
            result.payed = '1';
            result.status = 'payed';
-           result.internal_payment_method = res['internal_payment_method'];
+           result.internal_payment_method = body.payment.payment_method;
            result.internal_payment_date = body.payment.date;
         }
         return result;
