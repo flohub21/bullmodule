@@ -320,13 +320,10 @@ export class Invoices {
     credit_note_invoice_ref: string;
     total_credit : number;
     clientName: string;
-    canBeModified: boolean = true;
     status: string[];
     type:string;
     energy:string;
     openAmount: number;
-    nbRappel:number = 0;
-    nbSepaSubmit:number = 0;
     listOperation: Operations_workflow[];
 
 

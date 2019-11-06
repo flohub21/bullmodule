@@ -4,7 +4,6 @@ import {Invoices} from './entity/invoices.entity';
 import {CustomerController} from '../customer/customer.controller';
 import {NoResultException} from "../exception/NoResultException";
 import {Operations_workflow} from "../operations-workflow/entity/operations-workflow.entity";
-import {UserController} from "../user/user.controller";
 import {Operation_invoices_status} from "../operations-workflow/entity/Operation-invoices-status.entity";
 import * as moment from 'moment';
 
@@ -14,8 +13,7 @@ import * as moment from 'moment';
 export class InvoiceController {
 
     constructor(private invoiceService: InvoiceService,
-                private customerCont: CustomerController,
-                private userCont: UserController) {}
+                private customerCont: CustomerController) {}
 
     @Post('create')
     create(@Body() body) {
@@ -385,23 +383,11 @@ export class InvoiceController {
                 op.status.status = el.status;
                 op.more_information = el.more_information;
                 el.listOperation = [op];
+                if(!op.date){
+                    el.showExpand = false;
+                }
             }
-            if(el.credit_url){
-                let credit:any = (JSON.parse(JSON.stringify(el)));
-                credit.invoice_sub_type = 'CREDIT_NOTE';
-                credit.created_at = el.credit_note_date;
-                credit.invoice_ref = el.credit_note_invoice_ref;
-                /*if(el.total_credit && +el.total_credit > 0){
-                    el.total_credit = 0 - (+el.total_credit);
-                }*/
-                credit.openAmount = el.total_credit;
-                credit.credit_url = el.credit_url;
-                credit.path = el.credit_url;
-                credit.showExpand = false;
-                credit.disabled = true;
-                credit.isCreditNote = true;
-                newInvoiceList.push(credit);
-            }
+
             if(el.period_start && el.period_start.indexOf('/') !== -1){
                 el.period_start = moment(el.period_start, 'DD/MM/YYYY').format('YYYY-MM-DD');
             }
@@ -470,7 +456,7 @@ export class InvoiceController {
         return listInvoice;
     }
 
-    @Post('get_by_pod')
+    @Post('find_by_pod')
     async searchByPod(@Body() body){
         return await this.invoiceService.getAllByPod(body.pod);
     }

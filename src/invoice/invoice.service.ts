@@ -10,13 +10,11 @@ export class InvoiceService extends RequestService{
     repInvoiceMysql: any;
     reqSelect= "SELECT invoices.*, op.*, SUBSTRING(invoice_type,LOCATE( '_', invoice_type)+1) as type," +
                " SUBSTRING(invoice_type,1,LOCATE( '_', invoice_type)-1) as energy, " +
-               " (SELECT new_balance FROM payments_list p WHERE p.invoice_ref = invoices.invoice_ref ORDER BY  p.created_at desc LIMIT 1 ) as openAmount,"+
-               " cn.credit_note_date, cn.total_credit, cn.credit_note_invoice_ref"+
+               " (SELECT new_balance FROM payments_list p WHERE p.invoice_ref = invoices.invoice_ref ORDER BY  p.created_at desc LIMIT 1 ) as openAmount"+
                " FROM invoices "+
                " LEFT JOIN (select o.date as operationDate, o.internal_comment as operationComment, st.description, st.status, o.id as operationId, o.more_information FROM operations_workflow o" +
                             " LEFT JOIN  operation_invoices_status st ON o.status_id = st.id) as op ON op.operationId = " +
-                            " (SELECT id from operations_workflow op where op.invoice_reference = invoices.invoice_ref ORDER BY  op.updated_at desc, op.operationDate desc LIMIT 1) "+
-               " LEFT JOIN credit_notes cn ON cn.invoice_ref = invoices.invoice_ref";
+                            " (SELECT id from operations_workflow op where op.invoice_reference = invoices.invoice_ref ORDER BY  op.updated_at desc, op.operationDate desc LIMIT 1) ";
 
     constructor(private filter: FilterService) {
 

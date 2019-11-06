@@ -280,7 +280,7 @@ export class OperationsWorkflowController {
         return await this.operationService.save(body.operation);
     }
 
-    @Post('get_all_by_invoice')
+    @Post('find_all_by_invoice')
     async getAllByInvoice(@Body() body){
 
         let operation: Operations_workflow[] = [];

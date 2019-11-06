@@ -9,7 +9,7 @@ export class CustomerController {
 
     constructor(private customerService: CustomerService){}
 
-    @Post('get_by_id')
+    @Post('find_by_id')
     async getAllById(@Body() body) {
        let listId
         if(body.id === undefined){
@@ -26,19 +26,19 @@ export class CustomerController {
     }
 
 
-    @Post('get_by_all')
+    @Post('find_by_all')
     async getAllByAll(@Body() body) {
         return await this.customerService.getAllCustomerByAll(body.str);
         // return {value : 'create'};
     }
 
-    @Post('get_by_pod')
+    @Post('find_by_pod')
     async getAllByPod(@Body() body) {
         return await this.customerService.getAllCustomerByPod(body.pod);
         // return {value : 'create'};
     }
 
-    @Post('get_by_addr')
+    @Post('find_by_addr')
     async getAllByAddr(@Body() body) {
         return await this.customerService.getAllCustomerByAddr(body.address);
         // return {value : 'create'};
