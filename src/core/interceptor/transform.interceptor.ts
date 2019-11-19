@@ -13,11 +13,11 @@ export interface Response<T> {
  */
 export class TransformInterceptor<T> implements NestInterceptor<T, Response<T>> {
     intercept(context: ExecutionContext, next: CallHandler): Observable<Response<any>> {
-
+        console.log(context);
         return next.handle().pipe(map((result) => {
-           //console.log('----------------------------');
-            //console.log(result);
-            //console.log('transform interceptor end ');
+           console.log('----------------------------');
+            console.log(result.length);
+            console.log('transform interceptor end ');
                 return {
                     ok:true,
                     result: result
@@ -25,4 +25,5 @@ export class TransformInterceptor<T> implements NestInterceptor<T, Response<T>> 
             })
         );
     }
+
 }

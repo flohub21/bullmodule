@@ -16,8 +16,9 @@ export class UserService  extends RequestService {
     }
 
     /**
-     * find all invoices
-     * @return Promise<Invoices[]>
+     * find one user by this id
+     * @param id string
+     * @return Promise<Users>
      */
 
     findOne(id: string): Promise<Users> {
@@ -26,5 +27,13 @@ export class UserService  extends RequestService {
                 resolve(rs);
             });
         });
+    }
+    /**
+     * find one user by this email
+     * @param email string
+     * @return Promise<Users>
+     */
+    async findByEmail(email: string): Promise<Users> {
+        return this.repUser.find(user => user.email === email);
     }
 }
