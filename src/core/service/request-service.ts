@@ -16,14 +16,12 @@ export abstract class  RequestService {
      * @return Promise <boolean>
      */
     createConnectionMySql(): Promise<boolean> {
-        return new Promise((resolve, reject) => {
-                createConnection(JSON.parse(this.dbCfgMysql)).then((connection) => {
-                    this.connectionMysql = connection;
-                    this.managerMySql= getManager("mysql");
-                    resolve(true);
-                });
-
-
+        return new Promise((resolve) => {
+            createConnection(JSON.parse(this.dbCfgMysql)).then((connection) => {
+                this.connectionMysql = connection;
+                this.managerMySql= getManager("mysql");
+                resolve(true);
+            });
         });
     }
     /**
@@ -40,11 +38,11 @@ export abstract class  RequestService {
         }
 
         return new Promise((resolve, reject) => {
-                createConnection(JSON.parse(cfg)).then((connection) => {
-                    this.connectionPostgres = connection;
-                    this.managerPostgres = getManager("postgres");
-                    resolve(true);
-                });
+            createConnection(JSON.parse(cfg)).then((connection) => {
+                this.connectionPostgres = connection;
+                this.managerPostgres = getManager("postgres");
+                resolve(true);
+            });
         });
     }
 

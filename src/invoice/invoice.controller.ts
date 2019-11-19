@@ -191,15 +191,13 @@ export class InvoiceController {
         });
     }
 
-
-
     /**
      * save payment method
      * @param data any data containing the invoice reference
      */
     async savePaymentMethod(data: any){
         return new Promise((resolve)=>{
-            this.find(data.invoice_ref).then((invoice: Invoices)=>{
+            this.find(data).then((invoice: Invoices)=>{
                 let method: string;
                 if(invoice.payment_method === "Virement bancaire"){
                     method = "TRANSFER";
@@ -225,10 +223,12 @@ export class InvoiceController {
     async updateComment(@Body() body) {
 
         return await this.invoiceService.updateComment(body.invoice);
-
     }
 
     @Get('find_all')
+    /**
+     * find all invoice
+     */
     async findAll(): Promise<Invoices[]> {
         const listInvoice = await this.invoiceService.findAll();
 
@@ -236,12 +236,18 @@ export class InvoiceController {
     }
 
     @Post('find')
+    /**
+     * find one invoice by invoice_ref
+     */
     async find(@Body() body): Promise<Invoices> {
         const invoice = await this.invoiceService.findOne(body.invoice_ref);
         return invoice;
     }
 
     @Post('find_filter')
+    /**
+     * find invoice by filter
+     */
     async findByFilter(@Body() body){
         let listCustomer;
         let listId = [];
@@ -277,18 +283,6 @@ export class InvoiceController {
                 throw new NoResultException();
             }
         }
-
-       /* if(body.filter.method_payment !== undefined){
-
-            let listInvoice = await this.invoiceService.getAllInternalAndPaymentMethod(body.filter.method_payment.value);
-            if(listInvoice.length > 0) {
-                listInvoice.forEach((el) => {
-                    listId.push(el.id);
-                });
-            } else {
-                throw new NoResultException();
-            }
-        }*/
 
         if(body.filter.open != undefined) {
             body.filter.payed = {};

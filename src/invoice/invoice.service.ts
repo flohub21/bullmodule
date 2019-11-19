@@ -62,8 +62,9 @@ export class InvoiceService extends RequestService{
      */
    updateStatus(ref: string[], data: any): Promise<any> {
        let req = '';
+
         if(data.text){
-            req = "update invoices set "+ data.key+ " = '"+data.value + "' where invoice_ref IN (" + this.getINForSql(ref) + ")";
+            req = "update invoices set "+ data.key+ " = '"+this.parseStringToSql(data.value) + "' where invoice_ref IN (" + this.getINForSql(ref) + ")";
         } else {
             req = 'update invoices set '+ data.key+ ' = '+data.value + ' where invoice_ref IN (' + this.getINForSql(ref) + ')';
         }
@@ -159,11 +160,20 @@ export class InvoiceService extends RequestService{
         });
     }
 
+    getAllByRef(listRef: string[] ): Promise<Invoices[]>{
+        const req = this.reqSelect +
+            " WHERE invoice_ref IN ("+this.getINForSql(listRef)+")";
+        return new Promise(( resolve) => {
+            this.repInvoiceMysql.query(req).then((rs) => {
+                resolve(rs);
+            });
+        });
+    }
+
    findByFilter(data: any): Promise<Invoices[]>{
         let req = this.filter.generateRequest(this.reqSelect,data);
 
         return new Promise((resolve, reject) => {
-          //  console.log(req);
             this.repInvoiceMysql.query(req).then((listInvoice) => {
              resolve(listInvoice);
             });

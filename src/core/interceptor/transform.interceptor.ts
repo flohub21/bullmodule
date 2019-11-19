@@ -1,6 +1,7 @@
 import { Injectable, NestInterceptor, ExecutionContext, CallHandler } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
+import * as moment from 'moment';
 
 export interface Response<T> {
     ok:boolean;
@@ -13,15 +14,12 @@ export interface Response<T> {
  */
 export class TransformInterceptor<T> implements NestInterceptor<T, Response<T>> {
     intercept(context: ExecutionContext, next: CallHandler): Observable<Response<any>> {
-
         return next.handle().pipe(map((result) => {
-           //console.log('----------------------------');
-            //console.log(result);
-            //console.log('transform interceptor end ');
-                return {
-                    ok:true,
-                    result: result
-                };
+                    return {
+                        ok:true,
+                        result: result
+                    };
+
             })
         );
     }
