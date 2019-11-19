@@ -8,16 +8,13 @@ import {FilterService} from "../core/service/filter.service";
 @Injectable()
 export class InvoiceService extends RequestService{
     repInvoiceMysql: any;
-    reqSelect= "SELECT *,SUBSTRING(invoice_type,LOCATE( '_', invoice_type)+1) as type," +
+    reqSelect= "SELECT invoices.*, op.*, SUBSTRING(invoice_type,LOCATE( '_', invoice_type)+1) as type," +
                " SUBSTRING(invoice_type,1,LOCATE( '_', invoice_type)-1) as energy, " +
-               " concat( customer_num,' ',pod ) as pod_id," +
-               " (SELECT new_balance FROM payments_list p WHERE p.invoice_ref = invoices.invoice_ref ORDER BY  p.created_at desc LIMIT 1 ) as openAmount,"+
-               " (SELECT COUNT(id) from operations_workflow o where o.invoice_reference = invoices.invoice_ref  and o.status_id = 16) as nbRappel,"+
-               " (SELECT COUNT(id) from operations_workflow o where o.invoice_reference = invoices.invoice_ref  and o.status_id = 17) as nbSepaSubmit"+
+               " (SELECT new_balance FROM payments_list p WHERE p.invoice_ref = invoices.invoice_ref ORDER BY  p.created_at desc LIMIT 1 ) as openAmount"+
                " FROM invoices "+
                " LEFT JOIN (select o.date as operationDate, o.internal_comment as operationComment, st.description, st.status, o.id as operationId, o.more_information FROM operations_workflow o" +
-               "                LEFT JOIN  operation_invoices_status st ON o.status_id = st.id) as op ON op.operationId = " +
-               "                (SELECT id from operations_workflow op where op.invoice_reference = invoices.invoice_ref ORDER BY  op.operationDate desc, op.created_at desc LIMIT 1) ";
+                            " LEFT JOIN  operation_invoices_status st ON o.status_id = st.id) as op ON op.operationId = " +
+                            " (SELECT id from operations_workflow op where op.invoice_reference = invoices.invoice_ref ORDER BY  op.updated_at desc, op.operationDate desc LIMIT 1) ";
 
     constructor(private filter: FilterService) {
 
@@ -64,19 +61,18 @@ export class InvoiceService extends RequestService{
      * @param payed number status ( 0 | 1)
      */
    updateStatus(ref: string[], data: any): Promise<any> {
-        console.log('update status ');
-        console.log(ref);
-        console.log(data);
-        console.log('--------------------------');
-        let req = 'update invoices set '+ data.key+ ' = '+data.value + ' where invoice_ref IN (' + this.getINForSql(ref) + ')';
+       let req = '';
+
+        if(data.text){
+            req = "update invoices set "+ data.key+ " = '"+this.parseStringToSql(data.value) + "' where invoice_ref IN (" + this.getINForSql(ref) + ")";
+        } else {
+            req = 'update invoices set '+ data.key+ ' = '+data.value + ' where invoice_ref IN (' + this.getINForSql(ref) + ')';
+        }
         console.log(req);
 
         return this.repInvoiceMysql.query(req);
     }
 
-    /*let rep = connection.getRepository(Invoices);
-rep.find().then((rs) =>  {
-});*/
     /**
      * find all invoices
      * @return Promise<Invoices[]>
@@ -156,7 +152,17 @@ rep.find().then((rs) =>  {
                     " WHERE pod IN ("+this.getINForSql(listPod)+")"+
                     " ORDER BY created_at DESC"+
                     " LIMIT 10";
-        console.log(req);
+        //console.log(req);
+        return new Promise(( resolve) => {
+            this.repInvoiceMysql.query(req).then((rs) => {
+                resolve(rs);
+            });
+        });
+    }
+
+    getAllByRef(listRef: string[] ): Promise<Invoices[]>{
+        const req = this.reqSelect +
+            " WHERE invoice_ref IN ("+this.getINForSql(listRef)+")";
         return new Promise(( resolve) => {
             this.repInvoiceMysql.query(req).then((rs) => {
                 resolve(rs);
@@ -166,8 +172,8 @@ rep.find().then((rs) =>  {
 
    findByFilter(data: any): Promise<Invoices[]>{
         let req = this.filter.generateRequest(this.reqSelect,data);
+
         return new Promise((resolve, reject) => {
-            console.log(req);
             this.repInvoiceMysql.query(req).then((listInvoice) => {
              resolve(listInvoice);
             });
@@ -188,7 +194,7 @@ rep.find().then((rs) =>  {
             " FROM  `invoices` where payed = 0 and canceled = 0 and customer_num =" + "'" + customerId + "' ORDER BY id DESC LIMIT 1";
             //" FROM  `invoices` where show_my_eida = 1 and payed = 0 and canceled = 0 and customer_num =" + "'" + customerId + "' ORDER BY id DESC LIMIT 1";
             /*const req = "SELECT sum(total_price_with_tax) as notPayed FROM `invoices` where show_my_eida = 1 and payed = 0 and canceled = 0 and customer_num =" + "'" + customerId + "' ORDER BY id DESC LIMIT 1";*/
-            console.log(req);
+            //console.log(req);
             this.repInvoiceMysql.query(req).then((res) => {
                 resolve(res);
             });
@@ -205,6 +211,26 @@ rep.find().then((rs) =>  {
                         " LEFT JOIN invoices i ON i.invoice_ref = o.invoice_reference" +
                         " WHERE o.created_at IN (select max(created_at) from operations_workflow  group by invoice_reference) "+
                         " AND o.status_id = "+statusId;
+            this.repInvoiceMysql.query(req).then((res) => {
+                resolve(res);
+            });
+        });
+    }
+
+    getAllInternalAndPaymentMethod(methodPay:string): Promise<Invoices[]> {
+        return new Promise((resolve) => {
+            let req: string;
+
+            if(methodPay === 'TRANSFER' ){
+                req = "SELECT * from invoices where  payment_method = 'Virement bancaire' AND (internal_payment_method = '"+methodPay+"' OR internal_payment_method is NULL)";
+            } else {
+                if(methodPay === 'SEPA'){
+                    req = "SELECT * from invoices where  payment_method = 'Prélèvement automatique' AND (internal_payment_method = '"+methodPay+"' OR internal_payment_method is NULL)";
+                } else {
+                    req = "SELECT * from invoices where internal_payment_method = '"+methodPay+"'";
+                }
+            }
+            console.log(req);
             this.repInvoiceMysql.query(req).then((res) => {
                 resolve(res);
             });

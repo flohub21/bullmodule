@@ -29,7 +29,7 @@ export class ContractService extends RequestService {
                         " LEFT JOIN business.cm_addresses a ON a.pod = co.pod" +
                         " where co.contract_id LIKE ('%" + str + "%') "+
                         " OR co.pod LIKE ('%" + str + "%') ";
-            //console.log(req);
+            ////console.log(req);
             this.managerPostgres.query(req).then((res) => {
                 resolve(res);
             });
@@ -37,12 +37,11 @@ export class ContractService extends RequestService {
     }
 
     getAllByCustomerId(listId: string[]): Promise<any[]> {
-        console.log(listId);
         return new Promise((resolve) => {
             const req = "select co.*, CONCAT(a.delivery_number,',',a.delivery_address,' ',a.delivery_city_fr) as delivery_addr, a.* from business.cm_contract co " +
                 " LEFT JOIN business.cm_addresses a ON a.pod = co.pod"+
                 " where customer_id IN (" + this.getINForSql(listId) + ")";
-            console.log(req);
+            //console.log(req);
             this.managerPostgres.query(req).then((res) => {
                 resolve(res);
             });
@@ -68,7 +67,7 @@ export class ContractService extends RequestService {
             const req = "select co.*, a.* from business.cm_contract co " +
                 " LEFT JOIN business.cm_addresses a ON a.pod = co.pod"+
                 " where co.pod IN (" + this.getINForSql(listPod) + ")";
-            //console.log(req);
+            ////console.log(req);
             this.managerPostgres.query(req).then((res) => {
                 resolve(res);
             });

@@ -6,7 +6,7 @@ export class UserController {
 
     constructor(private userService: UserService){}
 
-    @Get('get_by_id/:id')
+    @Get('find_by_id/:id')
     async findOne(@Param() param){
         return await this.userService.findOne(param.id);
     }

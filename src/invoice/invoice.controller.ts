@@ -4,7 +4,6 @@ import {Invoices} from './entity/invoices.entity';
 import {CustomerController} from '../customer/customer.controller';
 import {NoResultException} from "../exception/NoResultException";
 import {Operations_workflow} from "../operations-workflow/entity/operations-workflow.entity";
-import {UserController} from "../user/user.controller";
 import {Operation_invoices_status} from "../operations-workflow/entity/Operation-invoices-status.entity";
 import * as moment from 'moment';
 
@@ -14,8 +13,7 @@ import * as moment from 'moment';
 export class InvoiceController {
 
     constructor(private invoiceService: InvoiceService,
-                private customerCont: CustomerController,
-                private userCont: UserController) {}
+                private customerCont: CustomerController) {}
 
     @Post('create')
     create(@Body() body) {
@@ -44,56 +42,145 @@ export class InvoiceController {
      * @param invoices
      * @param status
      * @param idGroup
+     * @param value
      */
-    saveStatus(invoices: Invoices[],status:string, idGroup: number = null){
+    saveStatus(invoices: Invoices[],status:string, idGroup: number = null, value:any = null){
         let ref = [];
         let data:any;
         invoices.forEach((invoice) => {
             ref.push(invoice.invoice_ref);
         });
         switch (status) {
-            case 'valid_invoice':
+            case 'VALID_INVOICE':
                 data = {
                     key:'canceled',
                     value: '0'
                 };
                 break;
-            case 'cancel_invoice':
+
+            case 'CANCEL_INVOICE':
                 data = {
                     key:'canceled',
                     value: '1'
                 };
                 break;
-            case 'payed_invoice':
+
+            case 'PAYED_INVOICE':
                 data = {
                     key:'payed',
                     value: '1'
                 };
                 break;
-            case 'unpayed_invoice':
+
+            case 'UNPAYED_INVOICE':
                 data = {
                     key:'payed',
                     value: '0'
                 };
                 break;
-            case 'send_invoice' :
+
+            case 'SEND' :
                 data ={
                     key : 'draft',
                     value :'0'
                 };
                 break;
-            case 'notsend_invoice' :
+
+            case 'NOT_SEND' :
                 data ={
                     key : 'draft',
                     value :'1'
                 };
                 break;
-            case 'group':
+
+            case 'SPLIT':
+                data = {
+                    key:'id_group',
+                    value: null
+                };
+                break;
+
+            case 'GROUP':
                 data = {
                     key:'id_group',
                     value: idGroup
+
                 };
                 break;
+
+            case 'SEPA':
+                data = {
+                    key:'internal_payment_method',
+                    value: 'SEPA',
+                    text:true
+                };
+                break;
+
+            case 'TRANSFER':
+                data = {
+                    key:'internal_payment_method',
+                    value: 'TRANSFER',
+                    text:true
+                };
+                break;
+
+            case 'BEKI':
+                data = {
+                    key:'internal_payment_method',
+                    value: 'BEKI',
+                    text:true
+                };
+                break;
+
+            case 'CASH':
+                data = {
+                    key:'internal_payment_method',
+                    value: 'CASH',
+                    text:true
+                };
+                break;
+
+            case 'MULTI':
+                data = {
+                    key:'internal_payment_method',
+                    value: 'MULTI',
+                    text:true
+                };
+                break;
+
+            case 'internal_payment_date':
+                data = {
+                    key:'internal_payment_date',
+                    value: value,
+                    text: value !== null ? true : false
+                };
+
+                break;
+
+            case 'ADD_COMMENT':
+                data = {
+                    key:'note',
+                    value: value,
+                    text:true
+                };
+                break;
+
+            case 'send_status':
+                data = {
+                    key:'send_status',
+                    value: value,
+                    text:true
+                };
+                break;
+
+            default:
+                data = {
+                    key: status,
+                    value: value
+                };
+                break;
+
+
         }
         return new Promise((resolve) => {
             this.invoiceService.updateStatus(ref, data).then((res)=>{
@@ -104,14 +191,44 @@ export class InvoiceController {
         });
     }
 
+    /**
+     * save payment method
+     * @param data any data containing the invoice reference
+     */
+    async savePaymentMethod(data: any){
+        return new Promise((resolve)=>{
+            this.find(data).then((invoice: Invoices)=>{
+                let method: string;
+                if(invoice.payment_method === "Virement bancaire"){
+                    method = "TRANSFER";
+                } else {
+                    method = "SEPA"
+                }
+                let d =  {
+                    key:'internal_payment_method',
+                    value: method,
+                    text:true
+                };
+                this.invoiceService.updateStatus([data.invoice_ref], d).then((res)=>{
+                    let ret:any = {};
+                    ret[d.key] = d.value;
+                    resolve(ret);
+                });
+            })
+
+        });
+    }
+
     @Put('update/comment')
     async updateComment(@Body() body) {
 
         return await this.invoiceService.updateComment(body.invoice);
-
     }
 
     @Get('find_all')
+    /**
+     * find all invoice
+     */
     async findAll(): Promise<Invoices[]> {
         const listInvoice = await this.invoiceService.findAll();
 
@@ -119,32 +236,37 @@ export class InvoiceController {
     }
 
     @Post('find')
+    /**
+     * find one invoice by invoice_ref
+     */
     async find(@Body() body): Promise<Invoices> {
         const invoice = await this.invoiceService.findOne(body.invoice_ref);
         return invoice;
     }
 
     @Post('find_filter')
+    /**
+     * find invoice by filter
+     */
     async findByFilter(@Body() body){
         let listCustomer;
-
+        let listId = [];
         if(body.filter.customer !== undefined){
             // if value is an array = multiple pod
             if(typeof body.filter.customer.value !== 'string'){
-                console.log('array');
                 listCustomer = await this.customerCont.getAllByPod({pod: body.filter.customer.value});
             } else {
                 listCustomer = await this.customerCont.getAllByAll({str: body.filter.customer.value});
             }
 
             if(listCustomer.length > 0) {
-                let listId = [];
+                let listIdCust = [];
                 listCustomer.forEach((el) => {
-                    listId.push(el.customer_id);
+                    listIdCust.push(el.customer_id);
                 });
                 body.filter.customer_num = {
                     "operator" : "IN",
-                    "value":listId
+                    "value":listIdCust
                 };
             } else {
                 throw new NoResultException();
@@ -154,14 +276,9 @@ export class InvoiceController {
         if(body.filter.operation !== undefined){
             let listInvoice = await this.invoiceService.getAllByOperation(body.filter.operation.value);
             if(listInvoice.length > 0) {
-                let listId = [];
                 listInvoice.forEach((el) => {
                     listId.push(el.id);
                 });
-                body.filter.id = {
-                    "operator" : "IN",
-                    "value":listId
-                };
             } else {
                 throw new NoResultException();
             }
@@ -201,6 +318,12 @@ export class InvoiceController {
                 body.filter.total_price_with_tax.value = "0";
             }
         }
+        if(listId.length > 0){
+            body.filter.id = {
+                "operator" : "IN",
+                "value":listId
+            };
+        }
         let listInvoice = await this.invoiceService.findByFilter(body.filter);
         if(body.filter.open !== undefined) {
             let lst: Invoices[] = [];
@@ -236,9 +359,11 @@ export class InvoiceController {
 
     async trtListInvoice(listInvoice: Invoices[], listCustomer: any[] = null){
         let listId = [];
+        let newInvoiceList: Invoices[] = [];
         for(let key in listInvoice){
             let el:any = listInvoice[key];
             listId.push(el.customer_num);
+            newInvoiceList.push(el);
             if(! el.openAmount){
                 el.openAmount = +el.total_price_with_tax;
             }
@@ -252,30 +377,30 @@ export class InvoiceController {
                 op.status.status = el.status;
                 op.more_information = el.more_information;
                 el.listOperation = [op];
-            }
-            if(el.draft === 1){
-                el.sendStatus = 'notsend';
-            } else {
-                if(el.send_out_email !== null){
-                    el.sendStatus = 'email';
-                } else {
-                    el.sendStatus = 'post';
+                if(!op.date){
+                    el.showExpand = false;
                 }
             }
+
             if(el.period_start && el.period_start.indexOf('/') !== -1){
                 el.period_start = moment(el.period_start, 'DD/MM/YYYY').format('YYYY-MM-DD');
             }
-            if(el.internal_payment_method){
-
+            if(el.period_finish && el.period_finish.indexOf('/') !== -1){
+                el.period_finish = moment(el.period_finish, 'DD/MM/YYYY').format('YYYY-MM-DD');
             }
-
+            if(el.payment_method === 'Virement bancaire'){
+                el.payment_method = 'TRANSFER';
+            }
+            else{
+                el.payment_method = 'SEPA';
+            }
         }
         if(listCustomer === null){
             listCustomer = await this.customerCont.getAllById(listId);
         }
-        listInvoice = this.addCustomerNameToInvoice(listInvoice, listCustomer);
+        newInvoiceList = this.addCustomerNameToInvoice(newInvoiceList, listCustomer);
 
-        return listInvoice;
+        return newInvoiceList;
     }
 
     /**
@@ -325,7 +450,7 @@ export class InvoiceController {
         return listInvoice;
     }
 
-    @Post('get_by_pod')
+    @Post('find_by_pod')
     async searchByPod(@Body() body){
         return await this.invoiceService.getAllByPod(body.pod);
     }
