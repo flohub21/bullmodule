@@ -2,11 +2,17 @@ import {Body, Controller, Post, Get, Param} from '@nestjs/common';
 import {ContractService} from "./contract.service";
 import {Cm_contract} from "./entity/cm_contract.entity";
 import {AddressModel} from "./entity/address.model";
+import {Invoices} from "../invoice/entity/invoices.entity";
 
 @Controller('contract')
 export class ContractController {
-
     constructor(private contractService: ContractService){
+    }
+
+    @Post('file')
+    test(@Body() body){
+        console.log(body);
+        console.log('--------');
     }
 
     @Post('update')
@@ -47,6 +53,17 @@ export class ContractController {
         return listContract;
     }
 
+    /**
+     * Get all contracts, this is use in contract.service.ts in the function : getAllContract
+     */
+
+    @Get('get_all_contract')
+    async getAllContract(): Promise<any[]> {
+        const listContract = await this.contractService.getAllContract();
+
+        return listContract;
+    }
+
     async getAllByCustomerPod(listPod: string[]){
         let listContract =  await this.contractService.getAllByPod(listPod);
         listContract.forEach((el,key)=>{
@@ -71,6 +88,14 @@ export class ContractController {
         return await this.contractService.updateAddress(body.address, body.type, body.pod);
     }
 
+    /**
+     * Get consume for one pod, this is use in contract.service.ts in the function : getConsumeByPod
+     */
+    @Get('get_consume_by_pod/:pod')
+    async getConsumeByPod(@Param() param): Promise<any[]> {
+        const listConsumes = await this.contractService.getConsumeByPod(param.pod)
+        return listConsumes;
+    }
 
     /**
      * create contract object

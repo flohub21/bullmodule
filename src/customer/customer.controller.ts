@@ -1,10 +1,14 @@
-import {Body, Controller, Get, Injectable, Post} from '@nestjs/common';
+import {Body, Controller, Get, Injectable, Post, UploadedFile, UploadedFiles, UseInterceptors} from '@nestjs/common';
 import {CustomerService} from './customer.service';
 import {Cm_customer} from "./entity/cm_customer.entity";
 import {OperationsWorkflowController} from "../operations-workflow/operations-workflow.controller";
+import {FileInterceptor, MulterModule} from '@nestjs/platform-express';
 
 @Controller('customer')
 @Injectable()
+@UseInterceptors(
+    FileInterceptor('image'),
+)
 export class CustomerController {
 
     constructor(private customerService: CustomerService){}
@@ -48,5 +52,11 @@ export class CustomerController {
         return await this.customerService.search(str);
     }
 
+
+    @Post('upload')
+    @UseInterceptors(FileInterceptor('test'))
+    uploadFile(@UploadedFile() file) {
+        console.log(file);
+    }
 
 }
