@@ -10,22 +10,21 @@ import { ContractService } from './contract/contract.service';
 import { OperationsWorkflowController } from './operations-workflow/operations-workflow.controller';
 import { OperationsWorkflowService } from './operations-workflow/operations-workflow.service';
 import { UserController } from './user/user.controller';
-import { UserService } from './user/user.service';
 import { PaymentsListController } from './payments-list/payments-list.controller';
 import { PaymentsListService } from './payments-list/payments-list.service';
 import {APP_INTERCEPTOR} from "@nestjs/core";
 import {TransformInterceptor} from "./core/interceptor/transform.interceptor";
 import {FilterService} from "./core/service/filter.service";
-import { AuthModule } from './auth/auth.module';
-import { UserModule } from './user/user.module';
-import {AppController} from "./app.controller";
-
+import {UserModule} from "./user/user.module";
+import {AuthModule} from "./auth/auth.module";
+import { APP_GUARD } from '@nestjs/core';
+import {JwtStrategy} from "./auth/jwt.strategy";
 @Module({
   imports: [
       InvoiceModule,
       CustomerModule,
       UserModule,
-      AuthModule,
+      AuthModule
   ],
     providers: [
         InvoiceController,
@@ -34,19 +33,22 @@ import {AppController} from "./app.controller";
         ContractService,
         InvoiceService,
         OperationsWorkflowService,
-        UserService,
         FilterService,
-        UserController,
         PaymentsListService,
+        UserController,
         PaymentsListController,
         {
             provide:APP_INTERCEPTOR,
             useClass: TransformInterceptor
+        },
+        {
+            provide: APP_GUARD,
+            useClass: JwtStrategy,
         }
 
     ],
     exports: [CustomerModule],
-    controllers: [MainController, ContractController, OperationsWorkflowController, UserController, PaymentsListController]
+    controllers: [ MainController, ContractController, OperationsWorkflowController, PaymentsListController]
 })
 export class AppModule {
     constructor(){}

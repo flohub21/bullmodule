@@ -6,24 +6,25 @@ import * as dbConfig from '../../../ormconfig.json';
 export abstract class  RequestService {
     dbCfgMysql  = JSON.stringify(dbConfig.mysql);
     dbCfgPostgres  = JSON.stringify(dbConfig.postgres);
+
     connectionMysql: any;
     connectionPostgres: any;
     managerPostgres: any;
     managerMySql: any;
+    static firstCall: boolean = true;
 
     /**
      * create connection with mysql database
      * @return Promise <boolean>
      */
     createConnectionMySql(): Promise<boolean> {
+
         return new Promise((resolve, reject) => {
                 createConnection(JSON.parse(this.dbCfgMysql)).then((connection) => {
                     this.connectionMysql = connection;
                     this.managerMySql= getManager("mysql");
                     resolve(true);
                 });
-
-
         });
     }
     /**
@@ -31,8 +32,14 @@ export abstract class  RequestService {
      * @return Promise <boolean>
      */
     createConnectionPostgres(schema: string = null): Promise<boolean> {
-
         let cfg:any = this.dbCfgPostgres;
+        if(RequestService.firstCall){
+            let c = JSON.parse(cfg);
+            console.log(c.host);
+            console.log(c.database);
+            RequestService.firstCall = false;
+        }
+
         if(schema){
             cfg = JSON.parse(this.dbCfgPostgres);
             cfg.schema = schema;
@@ -43,6 +50,7 @@ export abstract class  RequestService {
                 createConnection(JSON.parse(cfg)).then((connection) => {
                     this.connectionPostgres = connection;
                     this.managerPostgres = getManager("postgres");
+
                     resolve(true);
                 });
         });

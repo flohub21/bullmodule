@@ -1,8 +1,9 @@
-import {Body, Controller, Get, Injectable, Post} from '@nestjs/common';
+import {Body, Controller, Get, Injectable, Post, UseGuards} from '@nestjs/common';
 import {CustomerService} from './customer.service';
 import {Cm_customer} from "./entity/cm_customer.entity";
-import {OperationsWorkflowController} from "../operations-workflow/operations-workflow.controller";
+import { AuthGuard } from '@nestjs/passport';
 
+@UseGuards(AuthGuard('jwt'))
 @Controller('customer')
 @Injectable()
 export class CustomerController {
@@ -31,7 +32,7 @@ export class CustomerController {
         return await this.customerService.getAllCustomerByAll(body.str);
         // return {value : 'create'};
     }
-
+qé
     @Post('find_by_pod')
     async getAllByPod(@Body() body) {
         return await this.customerService.getAllCustomerByPod(body.pod);

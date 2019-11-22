@@ -24,6 +24,7 @@ export class UserService  extends RequestService {
     findOne(id: string): Promise<Users> {
         return new Promise((resolve, reject) => {
             this.repUser.findOne(id).then((rs) => {
+                console.log(rs);
                 resolve(rs);
             });
         });
@@ -34,6 +35,11 @@ export class UserService  extends RequestService {
      * @return Promise<Users>
      */
     async findByEmail(email: string): Promise<Users> {
-        return this.repUser.find(user => user.email === email);
+        return new Promise((resolve) => {
+             let req = "select * from portals.users where email = '"+email+"'";
+             this.managerPostgres.query(req).then((rs)=>{
+                resolve(rs[0]);
+             });
+        });
     }
 }

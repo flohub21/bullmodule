@@ -7,12 +7,6 @@ import {TransformInterceptor} from "../core/interceptor/transform.interceptor";
 @Module({
     providers: [
         UserService,
-        UserController,
-        {
-            provide:APP_INTERCEPTOR,
-            useClass: TransformInterceptor
-        }
-
     ],
     controllers: [UserController],
     exports: [UserService]

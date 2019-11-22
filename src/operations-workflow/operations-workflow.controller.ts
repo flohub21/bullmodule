@@ -1,4 +1,4 @@
-import {Body, Controller, Get, Injectable, Param, Post} from '@nestjs/common';
+import {Body, Controller, Get, Injectable, Param, Post, UseGuards} from '@nestjs/common';
 import {Invoices} from "../invoice/entity/invoices.entity";
 import {Operation_invoices_status} from "./entity/Operation-invoices-status.entity";
 import {Request} from "./entity/Request.entity";
@@ -9,9 +9,11 @@ import {PaymentsListController} from "../payments-list/payments-list.controller"
 import {InvoiceController} from "../invoice/invoice.controller";
 import {Cm_contract} from "../contract/entity/cm_contract.entity";
 import {ContractController} from "../contract/contract.controller";
-import * as moment from 'moment';
+import { AuthGuard } from '@nestjs/passport';
 
-@Controller('operations-workflow')
+
+@UseGuards(AuthGuard('jwt'))
+ @Controller('operations-workflow')
 @Injectable()
 export class OperationsWorkflowController {
 

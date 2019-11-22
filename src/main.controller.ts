@@ -1,11 +1,11 @@
-import {Body, Controller, Injectable, Post} from '@nestjs/common';
+import {Body, Controller, Injectable, Post, UseGuards} from '@nestjs/common';
 import {InvoiceController} from "./invoice/invoice.controller";
-//import {CustomerController} from "./customer/customer.controller";
 import {NoResultException} from "./exception/NoResultException";
 import {CustomerController} from "./customer/customer.controller";
 import {ContractController} from "./contract/contract.controller";
-//import {Invoice} from "../../src/app/shared/models/invoice.model";
+import { AuthGuard } from '@nestjs/passport';
 
+@UseGuards(AuthGuard('jwt'))
 @Controller('main')
 @Injectable()
 export class MainController {

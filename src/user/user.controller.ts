@@ -1,4 +1,4 @@
-import {Controller, Get, Param} from '@nestjs/common';
+import {Body, Controller, Get, Param, Post} from '@nestjs/common';
 import {UserService} from "./user.service";
 
 @Controller('user')
@@ -8,6 +8,12 @@ export class UserController {
 
     @Get('find_by_id/:id')
     async findOne(@Param() param){
+        console.log('user : find one ');
         return await this.userService.findOne(param.id);
+    }
+
+    @Post('find_by_email')
+    async findByEmail(@Body() body){
+        return await this.userService.findByEmail(body.email);
     }
 }

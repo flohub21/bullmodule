@@ -1,13 +1,14 @@
-import {Body, Controller, Get, Injectable, Param, Post, Put} from '@nestjs/common';
+import {Body, Controller, Get, Injectable, Param, Post, Put, UseGuards} from '@nestjs/common';
 import {InvoiceService} from './invoice.service';
 import {Invoices} from './entity/invoices.entity';
 import {CustomerController} from '../customer/customer.controller';
 import {NoResultException} from "../exception/NoResultException";
 import {Operations_workflow} from "../operations-workflow/entity/operations-workflow.entity";
 import {Operation_invoices_status} from "../operations-workflow/entity/Operation-invoices-status.entity";
+import { AuthGuard } from '@nestjs/passport';
 import * as moment from 'moment';
 
-
+@UseGuards(AuthGuard('jwt'))
 @Controller('invoice')
 @Injectable()
 export class InvoiceController {

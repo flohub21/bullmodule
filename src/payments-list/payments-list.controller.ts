@@ -1,9 +1,11 @@
-import {Body, Controller, Injectable, Post} from '@nestjs/common';
+import {Body, Controller, Injectable, Post, UseGuards} from '@nestjs/common';
 import {PaymentsListService} from "./payments-list.service";
 import {Payments_list} from "./entity/payments-list.entity";
 import {InvoiceController} from "../invoice/invoice.controller";
 import {Invoices} from "../invoice/entity/invoices.entity";
+import { AuthGuard } from '@nestjs/passport';
 
+@UseGuards(AuthGuard('jwt'))
 @Controller('payments-list')
 @Injectable()
 export class PaymentsListController {
