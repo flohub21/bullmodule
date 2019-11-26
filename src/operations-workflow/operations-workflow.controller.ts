@@ -210,10 +210,8 @@ export class OperationsWorkflowController {
                 }
 
                 case 'NOT_SEND':{
-                    this.invoiceController.saveStatus(listInvoiceToUpdate, 'NOT_SEND',null);
                     this.invoiceController.saveStatus(listInvoiceToUpdate, 'send_status',null, 'NOT_SEND');
                     resultTmp = {
-                        draft : 1,
                         send_status : 'NOT_SEND'
                     };
                     break;
@@ -233,10 +231,8 @@ export class OperationsWorkflowController {
                             sendStatus = 'ALL';
                         }
                     }
-                    this.invoiceController.saveStatus(listInvoiceToUpdate, 'SEND',null);
                     this.invoiceController.saveStatus(listInvoiceToUpdate, 'send_status',null,sendStatus);
                     resultTmp = {
-                        draft : 0,
                         send_status : sendStatus
                     };
                     break;
