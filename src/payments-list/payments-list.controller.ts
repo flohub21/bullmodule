@@ -30,7 +30,6 @@ export class PaymentsListController {
             }
         }
         await this.paymentsListService.save(body.payment);
-        console.log(body.payment)
         let result: any = {
             openAmount : body.payment.new_balance
         };

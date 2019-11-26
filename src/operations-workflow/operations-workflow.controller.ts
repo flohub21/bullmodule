@@ -9,6 +9,10 @@ import {PaymentsListController} from "../payments-list/payments-list.controller"
 import {InvoiceController} from "../invoice/invoice.controller";
 import {Cm_contract} from "../contract/entity/cm_contract.entity";
 import {ContractController} from "../contract/contract.controller";
+import * as moment from 'moment';
+import {InvoiceService} from "../invoice/invoice.service";
+const NodeCache = require( "node-cache" );
+const myCache = new NodeCache();
 import { AuthGuard } from '@nestjs/passport';
 
 
@@ -16,12 +20,12 @@ import { AuthGuard } from '@nestjs/passport';
  @Controller('operations-workflow')
 @Injectable()
 export class OperationsWorkflowController {
-
     constructor(private operationService: OperationsWorkflowService,
                 private userController: UserController,
                 private paymentController: PaymentsListController,
                 private invoiceController: InvoiceController,
-                private contractController: ContractController){}
+                private contractController: ContractController,
+                private invoiceService: InvoiceService){}
 
     @Get('find_all_status')
     async findAllStatus(): Promise<Operation_invoices_status[]> {
@@ -36,18 +40,26 @@ export class OperationsWorkflowController {
      */
     @Post('create_by_filter')
     async createByFilter(@Body() body){
-        let listInvoice: Invoices[] = await this.invoiceController.findByFilter(body.filter);
-           body.invoiceComment = [];
+        if(myCache.get(body.operation[0].user.id) === undefined) {
+            myCache.set(body.operation[0].user.id, 'TRT');
+
+            let listInvoice: Invoices[] = await this.invoiceController.findByFilter(body.filter);
+            body.invoiceComment = [];
             let listOperation: Operations_workflow[] = [];
-            listInvoice.forEach((invoice)=>{
+            listInvoice.forEach((invoice) => {
                 let op: Operations_workflow = JSON.parse(JSON.stringify(body.operation[0]));
                 op.invoice_reference = invoice.invoice_ref;
                 listOperation.push(op);
                 body.invoiceComment.push(invoice.note);
             });
             body.operation = listOperation;
-            return await  this.create(body);
+            body.invoice = listInvoice;
+            let n = await this.create(body);
+            myCache.del( body.operation[0].user.id);
+            return n;
         }
+    }
+
     /**
      * create the operation and manage all changes to do in the data base
      * @param body any
@@ -58,39 +70,50 @@ export class OperationsWorkflowController {
         let result: any = [];
         let idGroup: number;
         let resultTmp: any;
-        if(listOperation[0].status.status === "GROUP"){
-            idGroup = new Date().getTime();
-        }
+        let saveSameOperation: boolean = true;
         let listInvoiceToUpdate:Invoices[] = [];
+        let defaultOperation: Operations_workflow;
+        let listInvoiceRef: string[] = [];
         for (let key in listOperation) {
+
             listOperation[key].user_id = listOperation[key].user.id;
             listOperation[key].status_id = listOperation[key].status.id;
-
             if (listOperation[key].status.status === 'CREDIT_NOTE' || listOperation[key].status.status === 'GENERATE_CREDIT_NOTE_REFUND') {
+                saveSameOperation = false;
+
                 let request = await this.saveRequest(listOperation[key], 'ANULATION');
                 listOperation[key].request_id = request.id;
             }
             if (listOperation[key].status.status.indexOf('SEPA_') !== -1 || listOperation[key].status.status === 'CANCEL_DOM') {
+                saveSameOperation = false;
                 let res: any = await this.operationService.getNbSpecialOperation(listOperation[key]);
                 listOperation[key].more_information =  (+res[0].nb + 1) + '';
             }
             let res: Operations_workflow = await this.operationService.save(listOperation[key]);
+
             let falseInvoice = new Invoices();
             falseInvoice.invoice_ref = res.invoice_reference;
             listInvoiceToUpdate.push(falseInvoice);
+            listInvoiceRef.push(res.invoice_reference);
+            if(key == '0'){
+                defaultOperation = listOperation[key];
+            }
             // save different thing for each invoice ( it depends the state of each invoice)
             if (res.status.status.indexOf('SEPA_') === -1 && res.status.status !== 'CANCEL_DOM') {
                 switch (res.status.status) {
                     case "NEW_PAYMENT": {
+                        saveSameOperation = false;
                         let payment:any = this.paymentController.getPaymentList(res.invoice_reference, body.payment, res.internal_comment, +res.id);
                         payment.date = listOperation[0].date;
                         payment.payment_method = listOperation[0].more_information;
                         resultTmp = await this.paymentController.create({payment: payment});
                         resultTmp.listOperation = [res];
+
                         result.push(resultTmp);
                         break;
                     }
                     case 'ADD_COMMENT':{
+                        saveSameOperation = false;
                         let comment: string;
                         if(listOperation.length === 1 || ! body.invoiceComment[key]){
                             comment = listOperation[0].internal_comment;
@@ -109,76 +132,117 @@ export class OperationsWorkflowController {
                 });
             }
         }
+        // specific case
+        if(defaultOperation.status.status === 'PAYED_INVOICE' && ! defaultOperation.more_information){
+            saveSameOperation = false;
+            // save status for all invoice
+            this.invoiceController.saveStatus(listInvoiceToUpdate, listOperation[0].status.status);
+            this.invoiceController.saveStatus(listInvoiceToUpdate, 'internal_payment_date', null, listOperation[0].date);
+            let invoiceSepa: Invoices[] = [];
+            let invoiceTransfer: Invoices[] = [];
+            let listInvoice: any[];
+            if(body.invoice){
+                listInvoice = body.invoice;
+            } else {
+                listInvoice = await this.invoiceService.getAllByRef(listInvoiceRef);
+            }
 
-        // save the same thing in all invoice
-        if (listOperation[0].status.status.indexOf('SEPA_') === -1 && listOperation[0].status.status !== 'CANCEL_DOM' && listOperation[0].status.status !== 'NEW_PAYMENT'
-            && listOperation[0].status.status !== 'CREDIT_NOTE' && listOperation[0].status.status !== 'ADD_COMMENT' ) {
-        switch (listOperation[0].status.status) {
-
-            case 'PAYED_INVOICE': {
-                await this.invoiceController.saveStatus(listInvoiceToUpdate, listOperation[0].status.status);
-                await this.invoiceController.saveStatus(listInvoiceToUpdate, 'internal_payment_date',null, listOperation[0].date);
-                let resPayment;
-                if(listOperation[0].more_information){
-                    resPayment = await this.invoiceController.saveStatus(listInvoiceToUpdate, listOperation[0].more_information);
-                } else {
-                    resPayment = await this.invoiceController.savePaymentMethod(listInvoiceToUpdate[0]);
-                }
-
+            listInvoice.forEach((invoice: Invoices)=>{
                 resultTmp = {
                     payed: '1',
                     internal_payment_date:listOperation[0].date,
-                    internal_payment_method: resPayment['internal_payment_method']
+                    listOperation: [defaultOperation]
                 };
-                break;
-            }
-            case 'UNPAYED_INVOICE':{
-                resultTmp = await this.invoiceController.saveStatus(listInvoiceToUpdate, listOperation[0].status.status);
-                await this.invoiceController.saveStatus(listInvoiceToUpdate, 'internal_payment_date',null, null);
-                await this.invoiceController.saveStatus(listInvoiceToUpdate, 'internal_payment_method',null, null);
-                resultTmp.internal_payment_date = null;
-                resultTmp.internal_payment_method = null;
-
-                break;
-
-            }
-
-            case 'CHANGE_PAYMENT_DATE':{
-                resultTmp = await this.invoiceController.saveStatus(listInvoiceToUpdate, 'internal_payment_date',null, listOperation[0].date);
-                break;
-            }
-
-            case 'NOT_SEND':{
-                await this.invoiceController.saveStatus(listInvoiceToUpdate, 'NOT_SEND',null);
-                await this.invoiceController.saveStatus(listInvoiceToUpdate, 'send_status',null, 'NOT_SEND');
-                resultTmp = {
-                    draft : 1,
-                    send_status : 'NOT_SEND'
-                };
-                break;
-
-            }
-            case 'SEND_EMAIL':
-            case 'SEND_POST':
-            case 'SEND_ALL': {
-                let sendStatus: string;
-                if(listOperation[0].status.status === 'SEND_EMAIL'){
-                    sendStatus = 'EMAIL';
+                if(invoice.payment_method === 'Virement bancaire' || invoice.payment_method === 'TRANSFER'){
+                    invoiceTransfer.push(invoice);
+                    resultTmp.internal_payment_method = 'TRANSFER';
                 } else {
-                    if(listOperation[0].status.status === 'SEND_POST') {
-                        sendStatus = 'POST';
-                    }
-                     else{
-                         sendStatus = 'ALL';
-                    }
+                    invoiceSepa.push(invoice);
+                    resultTmp.internal_payment_method = 'SEPA';
                 }
-                await this.invoiceController.saveStatus(listInvoiceToUpdate, 'SEND',null);
-                await this.invoiceController.saveStatus(listInvoiceToUpdate, 'send_status',null,sendStatus);
-                resultTmp = {
-                    draft : 0,
-                    send_status : sendStatus
-                };
-                break;
+                result.push(resultTmp);
+
+            });
+            if(invoiceSepa.length > 0){
+                this.invoiceController.saveStatus(invoiceSepa, 'SEPA');
+            }
+            if(invoiceTransfer.length > 0){
+                this.invoiceController.saveStatus(invoiceTransfer, 'TRANSFER');
+            }
+        }
+        if(saveSameOperation){
+           result = await this.saveSameStatusForInvoices(listOperation, listInvoiceToUpdate, result);
+        }
+       return result;
+    }
+
+    async saveSameStatusForInvoices(listOperation: Operations_workflow[], listInvoiceToUpdate: Invoices[], result: any[]){
+        let resultTmp: any;
+        let idGroup:number;
+        // save the same thing in all invoice ( only one request for all status)
+            switch (listOperation[0].status.status) {
+
+                case 'PAYED_INVOICE': {
+                    if(listOperation[0].more_information){
+                        this.invoiceController.saveStatus(listInvoiceToUpdate, listOperation[0].status.status);
+                        this.invoiceController.saveStatus(listInvoiceToUpdate, 'internal_payment_date',null, listOperation[0].date);
+                        let resPayment = await this.invoiceController.saveStatus(listInvoiceToUpdate, listOperation[0].more_information);
+                        resultTmp = {
+                            payed: '1',
+                            internal_payment_date:listOperation[0].date,
+                            internal_payment_method: resPayment['internal_payment_method']
+                        };
+
+                    }
+                    break;
+                }
+                case 'UNPAYED_INVOICE':{
+                    resultTmp = await this.invoiceController.saveStatus(listInvoiceToUpdate, listOperation[0].status.status);
+                    this.invoiceController.saveStatus(listInvoiceToUpdate, 'internal_payment_date',null, null);
+                    this.invoiceController.saveStatus(listInvoiceToUpdate, 'internal_payment_method',null, null);
+                    resultTmp.internal_payment_date = null;
+                    resultTmp.internal_payment_method = null;
+
+                    break;
+
+                }
+
+                case 'CHANGE_PAYMENT_DATE':{
+                    resultTmp = await this.invoiceController.saveStatus(listInvoiceToUpdate, 'internal_payment_date',null, listOperation[0].date);
+                    break;
+                }
+
+                case 'NOT_SEND':{
+                    this.invoiceController.saveStatus(listInvoiceToUpdate, 'NOT_SEND',null);
+                    this.invoiceController.saveStatus(listInvoiceToUpdate, 'send_status',null, 'NOT_SEND');
+                    resultTmp = {
+                        draft : 1,
+                        send_status : 'NOT_SEND'
+                    };
+                    break;
+
+                }
+                case 'SEND_EMAIL':
+                case 'SEND_POST':
+                case 'SEND_ALL': {
+                    let sendStatus: string;
+                    if(listOperation[0].status.status === 'SEND_EMAIL'){
+                        sendStatus = 'EMAIL';
+                    } else {
+                        if(listOperation[0].status.status === 'SEND_POST') {
+                            sendStatus = 'POST';
+                        }
+                        else{
+                            sendStatus = 'ALL';
+                        }
+                    }
+                    this.invoiceController.saveStatus(listInvoiceToUpdate, 'SEND',null);
+                    this.invoiceController.saveStatus(listInvoiceToUpdate, 'send_status',null,sendStatus);
+                    resultTmp = {
+                        draft : 0,
+                        send_status : sendStatus
+                    };
+                    break;
 
             }
 
@@ -201,31 +265,34 @@ export class OperationsWorkflowController {
                         nbSepaSubmit: +res.more_information
                     }];
 
-                } else {
-                    result.push({
-                        nbSepaSubmit: +res.more_information
-                    });
+                     } else {
+                         result.push({
+                             nbSepaSubmit: +res.more_information
+                         });
+                     }
+                     break;
+                 }
+                 case "OPEN": {
+                     let falseInvoice = new Invoices();
+                     falseInvoice.invoice_ref = res.invoice_reference;
+                     await this.invoiceController.saveStatus([falseInvoice], 'unpayed');
+                     if (!result) {
+                         result = {
+                             'payed': 0,
+                             'status': 'unpayed'
+                         };
+                     }
+                     break;
+                 }*/
+                default: {
+                    let falseInvoice = new Invoices();
+                    falseInvoice.invoice_ref = listOperation[0].invoice_reference;
+                    if(listOperation[0].status.status === "GROUP"){
+                        idGroup = new Date().getTime();
+                    }
+                    resultTmp = await this.invoiceController.saveStatus(listInvoiceToUpdate, listOperation[0].status.status, idGroup);
+                    break;
                 }
-                break;
-            }
-            case "OPEN": {
-                let falseInvoice = new Invoices();
-                falseInvoice.invoice_ref = res.invoice_reference;
-                await this.invoiceController.saveStatus([falseInvoice], 'unpayed');
-                if (!result) {
-                    result = {
-                        'payed': 0,
-                        'status': 'unpayed'
-                    };
-                }
-                break;
-            }*/
-            default: {
-                let falseInvoice = new Invoices();
-                falseInvoice.invoice_ref = listOperation[0].invoice_reference;
-                resultTmp = await this.invoiceController.saveStatus(listInvoiceToUpdate, listOperation[0].status.status, idGroup);
-                break;
-            }
 
          }
             listOperation.forEach((op)=>{
@@ -233,8 +300,7 @@ export class OperationsWorkflowController {
                 result.push(resultTmp);
 
             });
-        }
-       return result;
+            return result;
     }
 
     /**
@@ -287,15 +353,11 @@ export class OperationsWorkflowController {
 
         let operation: Operations_workflow[] = [];
         let  res = await this.operationService.getAllByInvoice(body.invoice_ref);
-        console.log('result : ');
-        console.log(res);
         for(let r of res){
             let user = await this.userController.findOne({id:r.user_id});
             let op = await Operations_workflow.prototype.getOperation(r,user );
             operation.push(op);
         }
-        console.log('operation : ');
-        console.log(operation);
         return operation;
     }
 }

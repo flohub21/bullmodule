@@ -7,7 +7,6 @@ import {MyLoggerService} from "../logger/MyLogger.service";
 export abstract class  RequestService {
     dbCfgMysql  = JSON.stringify(dbConfig.mysql);
     dbCfgPostgres  = JSON.stringify(dbConfig.postgres);
-
     connectionMysql: any;
     connectionPostgres: any;
     managerPostgres: any;
@@ -50,12 +49,11 @@ export abstract class  RequestService {
         }
 
         return new Promise((resolve, reject) => {
-                createConnection(JSON.parse(cfg)).then((connection) => {
-                    this.connectionPostgres = connection;
-                    this.managerPostgres = getManager("postgres");
-
-                    resolve(true);
-                });
+            createConnection(JSON.parse(cfg)).then((connection) => {
+                this.connectionPostgres = connection;
+                this.managerPostgres = getManager("postgres");
+                resolve(true);
+            });
         });
     }
 
