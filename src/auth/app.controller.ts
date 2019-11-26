@@ -4,7 +4,8 @@ import {AuthService} from "./auth.service";
 
 @Controller()
 export class AppController {
-    constructor(private readonly authService: AuthService){}
+    constructor(private readonly authService: AuthService,
+                ){}
 
     @UseGuards(AuthGuard('local'))
     @Post('auth/login')
@@ -15,6 +16,7 @@ export class AppController {
     @UseGuards(AuthGuard('jwt'))
     @Get('auth/isLogged')
     async isLogged(){
+       // this.logService.readCsvFile();
         return true;
     }
 }

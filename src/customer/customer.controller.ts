@@ -32,7 +32,7 @@ export class CustomerController {
         return await this.customerService.getAllCustomerByAll(body.str);
         // return {value : 'create'};
     }
-qé
+
     @Post('find_by_pod')
     async getAllByPod(@Body() body) {
         return await this.customerService.getAllCustomerByPod(body.pod);

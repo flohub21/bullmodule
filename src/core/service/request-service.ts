@@ -2,6 +2,7 @@
 import { InjectRepository } from '@nestjs/typeorm';
 import {Repository, createConnection, getManager} from 'typeorm';
 import * as dbConfig from '../../../ormconfig.json';
+import {MyLoggerService} from "../logger/MyLogger.service";
 
 export abstract class  RequestService {
     dbCfgMysql  = JSON.stringify(dbConfig.mysql);
@@ -12,15 +13,17 @@ export abstract class  RequestService {
     managerPostgres: any;
     managerMySql: any;
     static firstCall: boolean = true;
+    static logService = new MyLoggerService();
 
     /**
      * create connection with mysql database
      * @return Promise <boolean>
      */
     createConnectionMySql(): Promise<boolean> {
-
         return new Promise((resolve, reject) => {
-                createConnection(JSON.parse(this.dbCfgMysql)).then((connection) => {
+           let  jsonCfg = JSON.parse(this.dbCfgMysql);
+           jsonCfg.logger = RequestService.logService;
+                createConnection(jsonCfg).then((connection) => {
                     this.connectionMysql = connection;
                     this.managerMySql= getManager("mysql");
                     resolve(true);
