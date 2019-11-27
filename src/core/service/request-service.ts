@@ -1,12 +1,12 @@
-
-import { InjectRepository } from '@nestjs/typeorm';
-import {Repository, createConnection, getManager} from 'typeorm';
+import { createConnection, getManager} from 'typeorm';
 import * as dbConfig from '../../../ormconfig.json';
 import {MyLoggerService} from "../logger/MyLogger.service";
 
 export abstract class  RequestService {
     dbCfgMysql  = JSON.stringify(dbConfig.mysql);
-    dbCfgPostgres  = JSON.stringify(dbConfig.postgres);
+    dbCfgPostgres  = dbConfig.local ? JSON.stringify(dbConfig.postgres_local) : JSON.stringify(dbConfig.postgres);
+
+
     connectionMysql: any;
     connectionPostgres: any;
     managerPostgres: any;
