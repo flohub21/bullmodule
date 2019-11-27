@@ -16,6 +16,8 @@ import { PaymentsListService } from './payments-list/payments-list.service';
 import {APP_INTERCEPTOR} from "@nestjs/core";
 import {TransformInterceptor} from "./core/interceptor/transform.interceptor";
 import {FilterService} from "./core/service/filter.service";
+import { UploadController } from './upload/upload.controller';
+import { UploadService } from './upload/upload.service';
 
 @Module({
   imports: [
@@ -37,11 +39,12 @@ import {FilterService} from "./core/service/filter.service";
         {
             provide:APP_INTERCEPTOR,
             useClass: TransformInterceptor
-        }
+        },
+        UploadService
 
     ],
     exports: [CustomerModule],
-    controllers: [MainController, ContractController, OperationsWorkflowController, UserController, PaymentsListController]
+    controllers: [MainController, ContractController, OperationsWorkflowController, UserController, PaymentsListController, UploadController]
 })
 export class AppModule {
     constructor(){}

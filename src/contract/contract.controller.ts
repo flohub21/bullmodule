@@ -9,11 +9,7 @@ export class ContractController {
     constructor(private contractService: ContractService){
     }
 
-    @Post('file')
-    test(@Body() body){
-        console.log(body);
-        console.log('--------');
-    }
+
 
     @Post('update')
     async update(@Body() body){
