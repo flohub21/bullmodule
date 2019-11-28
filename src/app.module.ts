@@ -19,6 +19,9 @@ import {UserModule} from "./user/user.module";
 import {AuthModule} from "./auth/auth.module";
 import { APP_GUARD } from '@nestjs/core';
 import {JwtStrategy} from "./auth/jwt.strategy";
+import { UploadController } from './upload/upload.controller';
+import { UploadService } from './upload/upload.service';
+
 @Module({
   imports: [
       InvoiceModule,
@@ -44,11 +47,12 @@ import {JwtStrategy} from "./auth/jwt.strategy";
         {
             provide: APP_GUARD,
             useClass: JwtStrategy,
-        }
+        },
+        UploadService
 
     ],
     exports: [CustomerModule],
-    controllers: [ MainController, ContractController, OperationsWorkflowController, PaymentsListController]
+    controllers: [MainController, ContractController, OperationsWorkflowController, UserController, PaymentsListController, UploadController]
 })
 export class AppModule {
     constructor(){}

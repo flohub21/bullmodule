@@ -1,11 +1,15 @@
-import {Body, Controller, Get, Injectable, Post, UseGuards} from '@nestjs/common';
+import {Body, Controller, Get, Injectable, Post,UseGuards, UploadedFile, UseInterceptors} from '@nestjs/common';
 import {CustomerService} from './customer.service';
 import {Cm_customer} from "./entity/cm_customer.entity";
+import {FileInterceptor} from '@nestjs/platform-express';
 import { AuthGuard } from '@nestjs/passport';
 
 @UseGuards(AuthGuard('jwt'))
 @Controller('customer')
 @Injectable()
+@UseInterceptors(
+    FileInterceptor('image'),
+)
 export class CustomerController {
 
     constructor(private customerService: CustomerService){}
@@ -49,5 +53,11 @@ export class CustomerController {
         return await this.customerService.search(str);
     }
 
+
+    @Post('upload')
+    @UseInterceptors(FileInterceptor('test'))
+    uploadFile(@UploadedFile() file) {
+        console.log(file);
+    }
 
 }

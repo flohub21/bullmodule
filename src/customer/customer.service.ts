@@ -3,6 +3,7 @@ import {Invoices} from '../invoice/entity/invoices.entity';
 import {RequestService} from '../core/service/request-service';
 import {Cm_customer} from "./entity/cm_customer.entity";
 
+
 @Injectable()
 export class CustomerService extends RequestService{
     repCustomerPostgres: any;
@@ -133,7 +134,6 @@ export class CustomerService extends RequestService{
         });
 
     }
-
 
 
 

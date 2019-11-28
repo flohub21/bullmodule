@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import {RequestService} from "../core/service/request-service";
 import {Cm_contract} from "./entity/cm_contract.entity";
 import {AddressModel} from "./entity/address.model";
+import {Invoices} from "../invoice/entity/invoices.entity";
 
 @Injectable()
 export class ContractService extends RequestService {
@@ -41,6 +42,20 @@ export class ContractService extends RequestService {
                 " LEFT JOIN business.cm_addresses a ON a.pod = co.pod"+
                 " where customer_id IN (" + this.getINForSql(listId) + ")";
             //console.log(req);
+            this.managerPostgres.query(req).then((res) => {
+                resolve(res);
+            });
+        });
+    }
+
+    /**
+     * Get all contracts,this is use in contract.service.ts in the function : getAllContract
+     */
+
+    getAllContract(): Promise<any[]> {
+        return new Promise((resolve, reject) => {
+            const req = "select co.* from business.cm_contract co";
+            console.log(req);
             this.managerPostgres.query(req).then((res) => {
                 resolve(res);
             });
@@ -105,6 +120,21 @@ export class ContractService extends RequestService {
             this.managerPostgres.query(req).then((res)=>{
                 resolve(res);
             });
+        });
+    }
+
+    /**
+     * get consumes for one pod for every years since 2017, use for build graphic in list-contracts.component.ts and contract-customers.component.ts
+     * @param pod string
+     */
+    getConsumeByPod(pod : string) : Promise <any[]> {
+        return new Promise( (resolve)=>{
+            const req = 'SELECT pod,month,year,energy_day,energy_night FROM macolux_full.invoice_monthly_history where pod = "'+pod+'"'+' ORDER BY year,month asc ';
+            console.log(req)
+            this.managerMySql.query(req).then((res)=>{
+                console.log(res)
+                resolve(res);
+            })
         });
     }
 
