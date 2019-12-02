@@ -1,4 +1,4 @@
-import {Body, Controller, Get, Injectable, Param, Post} from '@nestjs/common';
+import {Body, Controller, Get, Injectable, Param, Post, UseGuards} from '@nestjs/common';
 import {Invoices} from "../invoice/entity/invoices.entity";
 import {Operation_invoices_status} from "./entity/Operation-invoices-status.entity";
 import {Request} from "./entity/Request.entity";
@@ -13,8 +13,11 @@ import * as moment from 'moment';
 import {InvoiceService} from "../invoice/invoice.service";
 const NodeCache = require( "node-cache" );
 const myCache = new NodeCache();
+import { AuthGuard } from '@nestjs/passport';
 
-@Controller('operations-workflow')
+
+@UseGuards(AuthGuard('jwt'))
+ @Controller('operations-workflow')
 @Injectable()
 export class OperationsWorkflowController {
     constructor(private operationService: OperationsWorkflowService,
@@ -28,7 +31,6 @@ export class OperationsWorkflowController {
     async findAllStatus(): Promise<Operation_invoices_status[]> {
         return await this.operationService.findAllStatus();
     }
-
 
     /**
      * create the operation for all invoice found by filter
@@ -66,6 +68,7 @@ export class OperationsWorkflowController {
     async create(@Body() body) {
         let listOperation: Operations_workflow[] = body.operation;
         let result: any = [];
+        let idGroup: number;
         let resultTmp: any;
         let saveSameOperation: boolean = true;
         let listInvoiceToUpdate:Invoices[] = [];
@@ -210,10 +213,8 @@ export class OperationsWorkflowController {
                 }
 
                 case 'NOT_SEND':{
-                    this.invoiceController.saveStatus(listInvoiceToUpdate, 'NOT_SEND',null);
                     this.invoiceController.saveStatus(listInvoiceToUpdate, 'send_status',null, 'NOT_SEND');
                     resultTmp = {
-                        draft : 1,
                         send_status : 'NOT_SEND'
                     };
                     break;
@@ -233,34 +234,32 @@ export class OperationsWorkflowController {
                             sendStatus = 'ALL';
                         }
                     }
-                    this.invoiceController.saveStatus(listInvoiceToUpdate, 'SEND',null);
                     this.invoiceController.saveStatus(listInvoiceToUpdate, 'send_status',null,sendStatus);
                     resultTmp = {
-                        draft : 0,
                         send_status : sendStatus
                     };
                     break;
 
+            }
+
+           /* case "RAPPEL_SEND": {
+                if (!result) {
+                    result = [{
+                        nbRappel: +res.more_information
+                    }];
+
+                } else {
+                    result.push({
+                        nbRappel: +res.more_information
+                    });
                 }
-
-                /* case "RAPPEL_SEND": {
-                     if (!result) {
-                         result = [{
-                             nbRappel: +res.more_information
-                         }];
-
-                     } else {
-                         result.push({
-                             nbRappel: +res.more_information
-                         });
-                     }
-                     break;
-                 }
-                 case "SEPA_SUBMITTED": {
-                     if (!result) {
-                         result = [{
-                             nbSepaSubmit: +res.more_information
-                         }];
+                break;
+            }
+            case "SEPA_SUBMITTED": {
+                if (!result) {
+                    result = [{
+                        nbSepaSubmit: +res.more_information
+                    }];
 
                      } else {
                          result.push({
@@ -291,8 +290,7 @@ export class OperationsWorkflowController {
                     break;
                 }
 
-            }
-
+         }
             listOperation.forEach((op)=>{
                 resultTmp.listOperation = [op];
                 result.push(resultTmp);
@@ -300,7 +298,6 @@ export class OperationsWorkflowController {
             });
             return result;
     }
-
 
     /**
      * save a record in the request table

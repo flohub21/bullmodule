@@ -1,9 +1,10 @@
-import {Body, Controller, Get, Injectable, Post, UploadedFile, UploadedFiles, UseInterceptors} from '@nestjs/common';
+import {Body, Controller, Get, Injectable, Post,UseGuards, UploadedFile, UseInterceptors} from '@nestjs/common';
 import {CustomerService} from './customer.service';
 import {Cm_customer} from "./entity/cm_customer.entity";
-import {OperationsWorkflowController} from "../operations-workflow/operations-workflow.controller";
-import {FileInterceptor, MulterModule} from '@nestjs/platform-express';
+import {FileInterceptor} from '@nestjs/platform-express';
+import { AuthGuard } from '@nestjs/passport';
 
+@UseGuards(AuthGuard('jwt'))
 @Controller('customer')
 @Injectable()
 @UseInterceptors(

@@ -10,12 +10,15 @@ import { ContractService } from './contract/contract.service';
 import { OperationsWorkflowController } from './operations-workflow/operations-workflow.controller';
 import { OperationsWorkflowService } from './operations-workflow/operations-workflow.service';
 import { UserController } from './user/user.controller';
-import { UserService } from './user/user.service';
 import { PaymentsListController } from './payments-list/payments-list.controller';
 import { PaymentsListService } from './payments-list/payments-list.service';
 import {APP_INTERCEPTOR} from "@nestjs/core";
 import {TransformInterceptor} from "./core/interceptor/transform.interceptor";
 import {FilterService} from "./core/service/filter.service";
+import {UserModule} from "./user/user.module";
+import {AuthModule} from "./auth/auth.module";
+import { APP_GUARD } from '@nestjs/core';
+import {JwtStrategy} from "./auth/jwt.strategy";
 import { UploadController } from './upload/upload.controller';
 import { UploadService } from './upload/upload.service';
 
@@ -23,6 +26,8 @@ import { UploadService } from './upload/upload.service';
   imports: [
       InvoiceModule,
       CustomerModule,
+      UserModule,
+      AuthModule
   ],
     providers: [
         InvoiceController,
@@ -31,14 +36,17 @@ import { UploadService } from './upload/upload.service';
         ContractService,
         InvoiceService,
         OperationsWorkflowService,
-        UserService,
         FilterService,
-        UserController,
         PaymentsListService,
+        UserController,
         PaymentsListController,
         {
             provide:APP_INTERCEPTOR,
             useClass: TransformInterceptor
+        },
+        {
+            provide: APP_GUARD,
+            useClass: JwtStrategy,
         },
         UploadService
 

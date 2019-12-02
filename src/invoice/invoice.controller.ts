@@ -1,13 +1,14 @@
-import {Body, Controller, Get, Injectable, Param, Post, Put} from '@nestjs/common';
+import {Body, Controller, Get, Injectable, Param, Post, Put, UseGuards} from '@nestjs/common';
 import {InvoiceService} from './invoice.service';
 import {Invoices} from './entity/invoices.entity';
 import {CustomerController} from '../customer/customer.controller';
 import {NoResultException} from "../exception/NoResultException";
 import {Operations_workflow} from "../operations-workflow/entity/operations-workflow.entity";
 import {Operation_invoices_status} from "../operations-workflow/entity/Operation-invoices-status.entity";
+import { AuthGuard } from '@nestjs/passport';
 import * as moment from 'moment';
 
-
+@UseGuards(AuthGuard('jwt'))
 @Controller('invoice')
 @Injectable()
 export class InvoiceController {
@@ -76,20 +77,6 @@ export class InvoiceController {
                 data = {
                     key:'payed',
                     value: '0'
-                };
-                break;
-
-            case 'SEND' :
-                data ={
-                    key : 'draft',
-                    value :'0'
-                };
-                break;
-
-            case 'NOT_SEND' :
-                data ={
-                    key : 'draft',
-                    value :'1'
                 };
                 break;
 
@@ -288,22 +275,6 @@ export class InvoiceController {
             body.filter.payed = {};
             body.filter.payed.operator = '=';
             body.filter.payed.value = '0'
-        }
-        if(body.filter.send_post != undefined || body.filter.send_email != undefined) {
-            let operator: string;
-            if(body.filter.send_post != undefined) {
-                operator = '=';
-            } else {
-                operator = '!=';
-            }
-
-            body.filter.draft = {};
-            body.filter.draft.operator = '=';
-            body.filter.draft.value = '0';
-
-            body.filter.send_out_email= {};
-            body.filter.send_out_email.operator = operator;
-            body.filter.send_out_email.value = 'null';
         }
 
         if(body.filter.refund != undefined) {

@@ -16,15 +16,30 @@ export class UserService  extends RequestService {
     }
 
     /**
-     * find all invoices
-     * @return Promise<Invoices[]>
+     * find one user by this id
+     * @param id string
+     * @return Promise<Users>
      */
 
     findOne(id: string): Promise<Users> {
         return new Promise((resolve, reject) => {
             this.repUser.findOne(id).then((rs) => {
+                console.log(rs);
                 resolve(rs);
             });
+        });
+    }
+    /**
+     * find one user by this email
+     * @param email string
+     * @return Promise<Users>
+     */
+    async findByEmail(email: string): Promise<Users> {
+        return new Promise((resolve) => {
+             let req = "select * from portals.users where email = '"+email+"'";
+             this.managerPostgres.query(req).then((rs)=>{
+                resolve(rs[0]);
+             });
         });
     }
 }
