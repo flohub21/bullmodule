@@ -11,8 +11,9 @@ export abstract class  RequestService {
     connectionPostgres: any;
     managerPostgres: any;
     managerMySql: any;
+
     static firstCall: boolean = true;
-    static logService = new MyLoggerService();
+    //static logService = new MyLoggerService();
 
     /**
      * create connection with mysql database
@@ -21,7 +22,7 @@ export abstract class  RequestService {
     createConnectionMySql(): Promise<boolean> {
         return new Promise((resolve, reject) => {
            let  jsonCfg = JSON.parse(this.dbCfgMysql);
-           jsonCfg.logger = RequestService.logService;
+           //jsonCfg.logger = RequestService.logService;
                 createConnection(jsonCfg).then((connection) => {
                     this.connectionMysql = connection;
                     this.managerMySql= getManager("mysql");

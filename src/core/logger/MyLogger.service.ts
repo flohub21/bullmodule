@@ -1,37 +1,27 @@
 import {Logger, QueryRunner} from "typeorm";
 import * as moment from 'moment';
+import {LogService} from "./log.service";
+import {RequestService} from "../service/request-service";
+import {Newbo_logs} from "./entity/newbo_logs.entity";
 
 const csv = require('csv-parser');
 const fs = require('fs');
 const createCsvWriter = require('csv-writer').createObjectCsvWriter;
 
-export interface InterfaceLog {
-    user:string;
-    time: string;
-    query: string;
+export class MyLoggerService  implements Logger {
 
-}
-
-export class MyLoggerService implements Logger {
-
-    filename:string = moment().format('YYYY-MM-DD')+'.log.csv';
     mailUser: string;
-    header = [
-        { id:'user', title:'User'},
-        { id:'time', title:'Time'},
-        { id:'query', title:'Query'}
-    ];
+    logService: LogService =  new LogService();
 
-
-
-    constructor(){}
+    constructor(){
+    }
 
     /**
      * read data from csv file
      */
-    readCsvFile(){
+    /*readCsvFile(){
         let isHeader = true; // allow to not get the header in the file
-        let data: InterfaceLog[] = [];
+        let data: newbo_logsEntity[] = [];
         return new Promise((resolve)=>{
             if(fs.existsSync(this.filename)){
                 fs.createReadStream(this.filename)
@@ -39,8 +29,8 @@ export class MyLoggerService implements Logger {
                     .on('data', (row) => {
 
                         if(!isHeader){
-                            let dataTmp: InterfaceLog = {
-                                user:row[0],
+                            let dataTmp: newbo_logsEntity = {
+                                userMail:row[0],
                                 time:row[1],
                                 query: row[2]
                             }
@@ -50,7 +40,6 @@ export class MyLoggerService implements Logger {
                         }
                     })
                     .on('end', () => {
-                        console.log('data read length : ' +data.length);
                         resolve(data);
                     })
             }else
@@ -58,12 +47,12 @@ export class MyLoggerService implements Logger {
                 resolve([]);
             }
         });
-    }
+    }*/
 
     /**
      * write data to csv file
      */
-    writeCsvFile(log: InterfaceLog[]){
+  /*  writeCsvFile(log: newbo_logsEntity[]){
 
         let csvWriter = createCsvWriter({
             path: this.filename,
@@ -71,29 +60,27 @@ export class MyLoggerService implements Logger {
             fieldDelimiter:';'
 
         });
-        this.readCsvFile().then((data:InterfaceLog[])=>{
-             log.forEach((row: InterfaceLog)=>{
+        this.readCsvFile().then((data:newbo_logsEntity[])=>{
+             log.forEach((row: newbo_logsEntity)=>{
                 data.push(row);
             });
-             console.log('log length : ' +log.length);
-             console.log('data write length : ' +data.length);
-             console.log(data);
             csvWriter.writeRecords(data).then(()=> console.log('The CSV file was written successfully'));
         });
 
-    }
+    }*/
 
     /**
      * Logs query and parameters used in it.
      */
     logQuery(query: string, parameters?: any[], queryRunner?: QueryRunner): any{
         if(this.isNeedToWrite(query)){
-            let log:InterfaceLog={
-                user: this.mailUser,
-                time: moment().format('YYYY-MM-DD - hh:mm:ss'),
+            let log: Newbo_logs = {
+                userMail: this.mailUser,
+                time: new Date(),
                 query: query
-            }
-            this.writeCsvFile([log]);
+            };
+           this.logService.saveRequest(log);
+
         }
 
     }
