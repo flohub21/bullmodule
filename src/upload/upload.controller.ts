@@ -10,6 +10,7 @@ import {ServerResponse} from "http";
 import { MulterModule } from '@nestjs/platform-express';
 import * as bodyParser from "body-parser";
 import {chmodSync, copyFile, unlink} from "fs";
+import * as fs from "fs";
 
 
 @Controller('upload')
@@ -42,38 +43,37 @@ export class UploadController {
         }
     )
     )
-    //This function is used to copy the file in the folder 'uploadedFiles' into the right folder wich was chosen in the form. After the copy, the file is deleted in the folder 'uploadedFiles' to keep only the one that was copied . Form datas can be taken into the @body
+    //This function is used to copy the file in the folder 'uploadedFiles' into the right folder wich was chosen in the form. After the copy, the file is deleted in the folder 'uploadedFiles' to keep only the one that was copied . Form's datas can be taken into the @body
       async serveFile(@Param('fileName') fileName, @Body() resBody, @Res() res): Promise<any> {
         console.log(res.req.file);
         console.log(resBody.folder);
-        //copy the file into the right folder wich was chosen in the form
-          await copyFile('./uploadedFiles/'+res.req.file.originalname,'./uploadedFiles/'+resBody.folder+'/'+res.req.file.originalname, errCopy => {
-             if (true) {
-                 console.log("copied")
-             }
-             if (false) {
-                 console.log("error")
-                 console.log(errCopy)
-             }
-         })
-        // delete the file in the folder 'uploadedFiles' to keep only the one that was copied
-          await unlink('./uploadedFiles/'+res.req.file.originalname, errDelete => {
-            if (true) {
-                console.log("deleted")
-            }
-            if (false) {
-                console.log("error")
-                console.log(errDelete)
-            }
-        })
-    }
-//
-// test(@Body() body){
-//     console.log(body);
-//     console.log('--------');
-// }
+        console.log(resBody.pod);
+        console.log(resBody.customerId);
 
-// getDesti(@Body() resBody){
-//     return resBody.folder;
-// }
+        //test if the folder customerId exist
+        if (!fs.existsSync('./uploadedFiles/'+resBody.folder+'/'+resBody.customerId+'/')){
+            fs.mkdirSync('./uploadedFiles/'+resBody.folder+'/'+resBody.customerId+'/');
+        }
+
+        //test if the folder POD exist
+        if (!fs.existsSync('./uploadedFiles/'+resBody.folder+'/'+resBody.customerId+'/'+resBody.pod+'/')){
+            fs.mkdirSync('./uploadedFiles/'+resBody.folder+'/'+resBody.customerId+'/'+resBody.pod+'/');
+        }
+        //copy the file into the right folder wich was chosen in the form
+          await copyFile('./uploadedFiles/'+res.req.file.originalname,'./uploadedFiles/'+resBody.folder+'/'+resBody.customerId+'/'+resBody.pod+'/'+res.req.file.originalname, errCopy => {
+             if (errCopy) throw errCopy;
+             console.log('copied')
+                  // delete the file in the folder 'uploadedFiles' to keep only the one that was copied
+                  unlink('./uploadedFiles/'+res.req.file.originalname, errDelete => {
+                      if (errDelete) throw errDelete;
+                      console.log('Deleted')
+                    }
+                  )
+          }
+         )
+
+    }
+
+     // @Get('download')
+     //
 }
