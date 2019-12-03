@@ -4,7 +4,7 @@ import {AuthService} from "./auth.service";
 
 @Controller()
 export class AppController {
-    constructor(private readonly authService: AuthService,
+    constructor(private readonly authService: AuthService
                 ){}
 
     @UseGuards(AuthGuard('local'))
@@ -18,5 +18,11 @@ export class AppController {
     async isLogged(){
        // this.logService.readCsvFile();
         return true;
+    }
+
+    @Get('auth/test')
+    async test(){
+        return await this.authService.test();
+
     }
 }

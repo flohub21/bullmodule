@@ -33,4 +33,9 @@ export class AuthService {
         };
     }
 
+    async test(){
+       return  await this.usersService.test()
+    }
+
+
 }

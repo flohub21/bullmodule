@@ -238,6 +238,20 @@ export class InvoiceController {
     async findByFilter(@Body() body){
         let listCustomer;
         let listId = [];
+        let addDraftFilter = false;
+        for(let key in body.filter){
+            if(key !== 'union'){
+                addDraftFilter = true;
+
+            }
+        }
+        if(addDraftFilter){
+            body.filter.draft = {};
+            body.filter.draft.operator = '=';
+            body.filter.draft.value = '0'
+            body.filter.draft.quote = true;
+
+        }
         if(body.filter.customer !== undefined){
             // if value is an array = multiple pod
             if(typeof body.filter.customer.value !== 'string'){
@@ -433,6 +447,7 @@ export class InvoiceController {
         }
         return listInvoice;
     }
+
 
 
 }

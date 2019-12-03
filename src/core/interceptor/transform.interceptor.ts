@@ -14,7 +14,7 @@ export interface Response<T> {
  */
 export class TransformInterceptor<T> implements NestInterceptor<T, Response<T>> {
     intercept(context: ExecutionContext, next: CallHandler): Observable<Response<any>> {
-        console.log('new request' + moment().format('hh:mm:ss'));
+        console.log('new request : ' + moment().format('hh:mm:ss'));
         return next.handle().pipe(map((result) => {
                 if(result.error){
                     return {

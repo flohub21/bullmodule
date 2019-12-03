@@ -14,7 +14,6 @@ export class ContractService extends RequestService {
             this.repContract = this.connectionPostgres.getRepository(Cm_contract);
         });
 
-        this.createConnectionMySql();
     }
 
     /**
@@ -82,10 +81,10 @@ export class ContractService extends RequestService {
 
     searchAddressStreet(str: string): Promise<any[]>{
         return new Promise( (resolve)=>{
-            const req = 'SELECT DISTINCT rue, localite, localite_lux, code_postal FROM places_addresses WHERE  CONCAT (localite," ", rue) like "%'+str+'%"' +
+            const req = 'SELECT DISTINCT rue, localite, localite_lux, code_postal FROM master.places_addresses WHERE  CONCAT (localite," ", rue) like "%'+str+'%"' +
                 ' OR CONCAT (rue, " ", localite) like "%'+str+'%" ORDER BY rue LIMIT 5' ;
             //console.log(req);
-            this.managerMySql.query(req).then((res)=>{
+            this.managerPostgres.query(req).then((res)=>{
                 resolve(res);
             })
         });
@@ -94,10 +93,10 @@ export class ContractService extends RequestService {
 
     getNumberStreet(dataAddress: AddressModel) {
         return new Promise( (resolve)=>{
-            const req = 'SELECT numero FROM places_addresses WHERE  localite = "'+dataAddress.city_fr+'"' +
+            const req = 'SELECT numero FROM master.places_addresses WHERE  localite = "'+dataAddress.city_fr+'"' +
                 ' AND rue =  "'+dataAddress.address+'"' +' AND code_postal =  "'+dataAddress.post_code+'" ORDER BY length(numero),numero' ;
             //console.log(req);
-            this.managerMySql.query(req).then((res)=>{
+            this.managerPostgres.query(req).then((res)=>{
                 resolve(res);
             })
         });
@@ -129,9 +128,9 @@ export class ContractService extends RequestService {
      */
     getConsumeByPod(pod : string) : Promise <any[]> {
         return new Promise( (resolve)=>{
-            const req = 'SELECT pod,month,year,energy_day,energy_night FROM macolux_full.invoice_monthly_history where pod = "'+pod+'"'+' ORDER BY year,month asc ';
+            const req = 'SELECT pod,month,year,energy_day,energy_night FROM master.invoice_monthly_history where pod = "'+pod+'"'+' ORDER BY year,month asc ';
             console.log(req)
-            this.managerMySql.query(req).then((res)=>{
+            this.managerPostgres.query(req).then((res)=>{
                 console.log(res)
                 resolve(res);
             })

@@ -10,15 +10,16 @@ export class OperationsWorkflowService extends RequestService{
     repOperationStatus: any;
     repOperation: any;
     repRequest: any;
+    schema: string = 'master';
     constructor() {
 
         super();
-        this.createConnectionMySql().then(() => {
-            this.repOperationStatus = this.connectionMysql.getRepository(Operation_invoices_status);
-            this.repOperation = this.connectionMysql.getRepository(Operations_workflow);
-            this.repRequest = this.connectionMysql.getRepository(Request);
+        this.createConnectionPostgres().then(() => {
+            this.repOperationStatus = this.connectionPostgres.getRepository(Operation_invoices_status);
+            this.repOperation = this.connectionPostgres.getRepository(Operations_workflow);
+            this.repRequest = this.connectionPostgres.getRepository(Request);
         });
-        this.createConnectionPostgres();
+
     }
 
     save(operation: Operations_workflow) {
@@ -39,13 +40,12 @@ export class OperationsWorkflowService extends RequestService{
     }
 
     getAllByInvoice(invoice_ref: string){
-        const req = "SELECT  st.*, op.*, p.amount_paid from operations_workflow op "+
+        const req = "SELECT  st.*, op.*, p.amount_paid from master.operations_workflow op "+
                     " LEFT JOIN  operation_invoices_status st ON op.status_id = st.id" +
                     " LEFT JOIN  payments_list p ON p.operation_id = op.id" +
                     " WHERE invoice_reference = '"+invoice_ref+"'"+
                     " ORDER BY op.updated_at ASC, op.date ASC ";
-        //console.log(req);
-
+        console.log(req);
        return this.repOperation.query(req);
     }
 
@@ -60,11 +60,9 @@ export class OperationsWorkflowService extends RequestService{
      */
     getNbSpecialOperation(operation: Operations_workflow): Promise<Request>{
         return new Promise((resolve) => {
-            const req = "SELECT count('id') as nb from operations_workflow op" +
+            const req = "SELECT count('id') as nb from master.operations_workflow op" +
                 " WHERE status_id = "+operation.status_id+" " +
                 " AND invoice_reference = '"+operation.invoice_reference+"'";
-
-            //console.log(req);
 
            this.repOperation.query(req).then((rs)=>{
               resolve(rs);

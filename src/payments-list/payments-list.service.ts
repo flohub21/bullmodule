@@ -10,8 +10,8 @@ export class PaymentsListService  extends RequestService {
     constructor() {
 
         super();
-        this.createConnectionMySql().then(() => {
-            this.repPaymentsList = this.connectionMysql.getRepository(Payments_list);
+        this.createConnectionPostgres().then(() => {
+            this.repPaymentsList = this.connectionPostgres.getRepository(Payments_list);
         });
     }
 
@@ -20,7 +20,7 @@ export class PaymentsListService  extends RequestService {
     }
 
     getLastOneByInvoice(invoice_ref: string){
-        const req = "SELECT * from payments_list where invoice_ref = '"+invoice_ref+"' ORDER BY created_at desc LIMIT 1";
+        const req = "SELECT * from master.payments_list where invoice_ref = '"+invoice_ref+"' ORDER BY created_at desc LIMIT 1";
         return this.repPaymentsList.query(req);
     }
 }
