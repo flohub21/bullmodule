@@ -3,14 +3,11 @@ import * as dbConfig from '../../../ormconfig.json';
 import {MyLoggerService} from "../logger/MyLogger.service";
 
 export abstract class  RequestService {
-    dbCfgMysql  = JSON.stringify(dbConfig.mysql);
     dbCfgPostgres  = dbConfig.local ? JSON.stringify(dbConfig.postgres_local) : JSON.stringify(dbConfig.postgres);
 
-
-    connectionMysql: any;
     connectionPostgres: any;
     managerPostgres: any;
-    managerMySql: any;
+
     static firstCall: boolean = true;
     static logService = new MyLoggerService();
 
@@ -18,38 +15,36 @@ export abstract class  RequestService {
      * create connection with mysql database
      * @return Promise <boolean>
      */
-    createConnectionMySql(): Promise<boolean> {
+    /*createConnectionMySql(): Promise<boolean> {
         return new Promise((resolve, reject) => {
            let  jsonCfg = JSON.parse(this.dbCfgMysql);
-           jsonCfg.logger = RequestService.logService;
+           //jsonCfg.logger = RequestService.logService;
                 createConnection(jsonCfg).then((connection) => {
                     this.connectionMysql = connection;
                     this.managerMySql= getManager("mysql");
                     resolve(true);
                 });
         });
-    }
+    }*/
     /**
      * create connection with postgres database
      * @return Promise <boolean>
      */
     createConnectionPostgres(schema: string = null): Promise<boolean> {
-        let cfg:any = this.dbCfgPostgres;
+        let cfg:any = JSON.parse(this.dbCfgPostgres);
+        cfg.logger = RequestService.logService;
         if(RequestService.firstCall){
-            let c = JSON.parse(cfg);
-            console.log(c.host);
-            console.log(c.database);
+            console.log(cfg.host);
+            console.log(cfg.database);
             RequestService.firstCall = false;
         }
 
         if(schema){
-            cfg = JSON.parse(this.dbCfgPostgres);
             cfg.schema = schema;
-            cfg = JSON.stringify(cfg);
         }
 
         return new Promise((resolve, reject) => {
-            createConnection(JSON.parse(cfg)).then((connection) => {
+            createConnection(cfg).then((connection) => {
                 this.connectionPostgres = connection;
                 this.managerPostgres = getManager("postgres");
                 resolve(true);

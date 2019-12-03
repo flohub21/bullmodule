@@ -10,7 +10,7 @@ export class FilterService {
      * Generate request form object
      * @param data any filter object , used to hgenerate the request
      */
-    generateRequest(reqSelect : string, data: any) {
+    generateRequest(reqSelect : string, data: any, limit: number = null) {
         let req = reqSelect + ' WHERE ';
         let reqWhere = '';
         let condOp: string;
@@ -50,14 +50,20 @@ export class FilterService {
                 let d = {};
                 d[key] = data['union'][key];
 
-                reqWhere += ' UNION ' + this.generateRequest(reqSelect,d);
+                reqWhere += ' UNION ' + this.generateRequest(reqSelect,d,limit);
             }
-            return req + reqWhere;
+            if(limit === null){
+                return req + reqWhere;
+            } else {
+                return req + reqWhere + ' LIMIT ' + limit;
+            }
+
+
         }
         for (let key in data['union']) {
             let d = {};
             d[key] = data['union'][key];
-            reqWhere += this.generateRequest(reqSelect,d);
+            reqWhere += this.generateRequest(reqSelect,d,limit);
         }
         return reqWhere;
     }

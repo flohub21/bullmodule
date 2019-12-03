@@ -37,9 +37,21 @@ export class UserService  extends RequestService {
     async findByEmail(email: string): Promise<Users> {
         return new Promise((resolve) => {
              let req = "select * from portals.users where email = '"+email+"'";
+             console.log(req);
              this.managerPostgres.query(req).then((rs)=>{
                 resolve(rs[0]);
              });
+        });
+    }
+
+    async test(){
+        return new Promise((resolve) => {
+            let req = 'select * from master.operation_invoices_status';
+            console.log(req);
+            this.managerPostgres.query(req).then((res) => {
+                console.log(req);
+                resolve(res);
+            });
         });
     }
 }
