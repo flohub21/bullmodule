@@ -79,20 +79,6 @@ export class InvoiceController {
                 };
                 break;
 
-            case 'SEND' :
-                data ={
-                    key : 'draft',
-                    value :'0'
-                };
-                break;
-
-            case 'NOT_SEND' :
-                data ={
-                    key : 'draft',
-                    value :'1'
-                };
-                break;
-
             case 'SPLIT':
                 data = {
                     key:'id_group',
@@ -288,22 +274,6 @@ export class InvoiceController {
             body.filter.payed = {};
             body.filter.payed.operator = '=';
             body.filter.payed.value = '0'
-        }
-        if(body.filter.send_post != undefined || body.filter.send_email != undefined) {
-            let operator: string;
-            if(body.filter.send_post != undefined) {
-                operator = '=';
-            } else {
-                operator = '!=';
-            }
-
-            body.filter.draft = {};
-            body.filter.draft.operator = '=';
-            body.filter.draft.value = '0';
-
-            body.filter.send_out_email= {};
-            body.filter.send_out_email.operator = operator;
-            body.filter.send_out_email.value = 'null';
         }
 
         if(body.filter.refund != undefined) {
