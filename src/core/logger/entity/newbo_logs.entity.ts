@@ -7,9 +7,8 @@ export class Newbo_logs{
     @PrimaryGeneratedColumn()
     time: Date;
 
-
     @Column()
-    userMail: string;
+    usermail: string;
 
     @Column()
     query: string;

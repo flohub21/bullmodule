@@ -14,6 +14,7 @@ export class MyLoggerService  implements Logger {
     logService: LogService =  new LogService();
 
     constructor(){
+        console.log('new my logger service');
     }
 
     /**
@@ -75,10 +76,11 @@ export class MyLoggerService  implements Logger {
     logQuery(query: string, parameters?: any[], queryRunner?: QueryRunner): any{
         if(this.isNeedToWrite(query)){
             let log: Newbo_logs = {
-                userMail: this.mailUser,
+                usermail: this.mailUser,
                 time: new Date(),
                 query: query
             };
+
            this.logService.saveRequest(log);
 
         }

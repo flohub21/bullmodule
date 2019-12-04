@@ -4,3 +4,4 @@ ormconfig.json
 package-lock.json
 gitignore
 .idea/workspace.xml
+database.json

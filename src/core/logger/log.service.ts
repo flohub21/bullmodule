@@ -28,9 +28,9 @@ export class LogService{
     createConnectionPostgres(schema: string = null): Promise<boolean> {
         let cfg:any = this.dbCfgPostgres;
 
-        if(schema){
+        if(this.schema){
             cfg = JSON.parse(this.dbCfgPostgres);
-            cfg.schema = schema;
+            cfg.schema = this.schema;
             cfg = JSON.stringify(cfg);
         }
 
@@ -46,8 +46,10 @@ export class LogService{
 
     saveRequest(req: Newbo_logs){
         console.log('save -----');
-        console.log('req');
+        console.log(req);
+       // console.log(this.repLog.save(req).getSql());
         return this.repLog.save(req);
+
     }
 
 

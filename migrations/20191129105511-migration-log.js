@@ -17,14 +17,12 @@ exports.setup = function(options, seedLink) {
 exports.up = function(db, callback) {
     const req = 'CREATE TABLE portals.newbo_logs ' +
     '('+
-    'id integer PRIMARY KEY NOT NULL,'+
+    'id SERIAL PRIMARY KEY NOT NULL ,'+
     'userMail character varying,'+
     'time TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,'+
     'query character varying,'+
     'created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,'+
     'updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP' +
-    ');';
-    console.log(req);
     db.runSql(req,null,callback)
 };
 
