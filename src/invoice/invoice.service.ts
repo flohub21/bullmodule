@@ -15,7 +15,7 @@ export class InvoiceService extends RequestService{
                " FROM master.invoices "+
                " LEFT JOIN (select o.date as operationDate, o.internal_comment as operationComment, st.description, st.status, o.id as operationId, o.more_information FROM master.operations_workflow o" +
                             " LEFT JOIN  master.operation_invoices_status st ON o.status_id = st.id) as op ON op.operationId = " +
-                            " (SELECT id from master.operations_workflow op where op.invoice_reference = invoices.invoice_ref ORDER BY  op.updated_at desc, op.date desc LIMIT 1) ";
+                            " (SELECT id from master.operations_workflow op where op.invoice_reference = master.invoices.invoice_ref ORDER BY  op.updated_at desc, op.date desc LIMIT 1) ";
 
     constructor(private filter: FilterService) {
 
@@ -102,7 +102,7 @@ export class InvoiceService extends RequestService{
      * @param str string a part of invoice reference
      */
     search(str: string): Promise<Invoices[]>{
-        const req = this.reqSelect + ' WHERE invoices.invoice_ref LIKE "%' + str + '%" OR invoices.pod LIKE "%'+ str+'%" ORDER BY invoices.created_at desc LIMIT 12';
+        const req = this.reqSelect + " WHERE invoices.invoice_ref LIKE '%"+ str +"%' OR invoices.pod LIKE '%"+ str +"%' ORDER BY invoices.created_at desc LIMIT 12 ";
         console.log(req);
         return new Promise((resolve, reject) => {
             this.repInvoicePostgres.query(req).then((listInvoice) => {
@@ -213,7 +213,7 @@ export class InvoiceService extends RequestService{
     getAllByOperation(statusId: number): Promise<Invoices[]> {
         return new Promise((resolve) => {
             const req = "SELECT i.* from master.operations_workflow o"+
-                        " LEFT JOIN invoices i ON i.invoice_ref = o.invoice_reference" +
+                        " LEFT JOIN "+this.schema+".invoices i ON i.invoice_ref = o.invoice_reference" +
                         " WHERE o.created_at IN (select max(created_at) from master.operations_workflow  group by invoice_reference) "+
                         " AND o.status_id = "+statusId;
             console.log(req);

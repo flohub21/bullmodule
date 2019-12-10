@@ -12,7 +12,7 @@ import * as moment from 'moment';
 @Controller('invoice')
 @Injectable()
 export class InvoiceController {
-
+npm
     constructor(private invoiceService: InvoiceService,
                 private customerCont: CustomerController) {}
 
@@ -239,6 +239,7 @@ export class InvoiceController {
         let listCustomer;
         let listId = [];
         let addDraftFilter = false;
+        console.log(body);
         for(let key in body.filter){
             if(key !== 'union'){
                 addDraftFilter = true;
@@ -275,6 +276,7 @@ export class InvoiceController {
         }
 
         if(body.filter.operation !== undefined){
+
             let listInvoice = await this.invoiceService.getAllByOperation(body.filter.operation.value);
             if(listInvoice.length > 0) {
                 listInvoice.forEach((el) => {
@@ -284,11 +286,12 @@ export class InvoiceController {
                 throw new NoResultException();
             }
         }
-
+        // open amount
         if(body.filter.open != undefined) {
             body.filter.payed = {};
             body.filter.payed.operator = '=';
-            body.filter.payed.value = '0'
+            body.filter.payed.value = '0';
+            body.filter.payed.quote = true;
         }
 
         if(body.filter.refund != undefined) {
@@ -309,6 +312,7 @@ export class InvoiceController {
                 "value":listId
             };
         }
+
         let listInvoice = await this.invoiceService.findByFilter(body.filter);
         if(body.filter.open !== undefined) {
             let lst: Invoices[] = [];
@@ -330,6 +334,7 @@ export class InvoiceController {
         } else {
             throw new NoResultException();
         }
+    console.log(listInvoice.length);
         return listInvoice;
 
     }

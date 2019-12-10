@@ -316,6 +316,21 @@ export class Invoices {
     @Column()
     send_status: string;
 
+    @Column()
+    internal_type : string;
+
+    @Column()
+    internal_export_file_name : string;
+
+    @Column()
+    parent_id : number;
+
+    @Column()
+    is_refound : boolean;
+
+    @Column()
+    is_payment_reminder : boolean;
+
     credit_note_date: string;
     credit_note_invoice_ref: string;
     total_credit : number;
@@ -325,6 +340,7 @@ export class Invoices {
     energy:string;
     openAmount: number;
     listOperation: Operations_workflow[];
+
 
 
 }

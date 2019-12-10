@@ -8,7 +8,7 @@ export class FilterService {
     constructor(){}
     /**
      * Generate request form object
-     * @param data any filter object , used to hgenerate the request
+     * @param data any filter object , used to generate the request
      */
     generateRequest(reqSelect : string, data: any, limit: number = null) {
         let req = reqSelect + ' WHERE ';

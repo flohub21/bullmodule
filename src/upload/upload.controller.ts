@@ -10,6 +10,7 @@ import {ServerResponse} from "http";
 import { MulterModule } from '@nestjs/platform-express';
 import * as bodyParser from "body-parser";
 import {chmodSync, copyFile, unlink} from "fs";
+import * as fs from "fs";
 
 
 @Controller('upload')
@@ -46,8 +47,23 @@ export class UploadController {
       async serveFile(@Param('fileName') fileName, @Body() resBody, @Res() res): Promise<any> {
         console.log(res.req.file);
         console.log(resBody.folder);
+        console.log(resBody.pod);
+        console.log(resBody.customerId);
+
+        //test if the folder customerId exist
+        if (!fs.existsSync('./uploadedFiles/'+resBody.folder+'/'+resBody.customerId+'/')){
+            fs.mkdirSync('./uploadedFiles/'+resBody.folder+'/'+resBody.customerId+'/');
+            console.log("customerId folder created")
+        }
+
+        //test if the folder POD exist
+        if (!fs.existsSync('./uploadedFiles/'+resBody.folder+'/'+resBody.customerId+'/'+resBody.pod+'/')){
+            fs.mkdirSync('./uploadedFiles/'+resBody.folder+'/'+resBody.customerId+'/'+resBody.pod+'/');
+            console.log("Pod folder created")
+        }
+
         //copy the file into the right folder wich was chosen in the form
-          await copyFile('./uploadedFiles/'+res.req.file.originalname,'./uploadedFiles/'+resBody.folder+'/'+res.req.file.originalname, errCopy => {
+          await copyFile('./uploadedFiles/'+res.req.file.originalname,'./uploadedFiles/'+resBody.folder+'/'+resBody.customerId+'/'+resBody.pod+'/'+res.req.file.originalname, errCopy => {
              if (true) {
                  console.log("copied")
              }

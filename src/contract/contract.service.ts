@@ -128,7 +128,7 @@ export class ContractService extends RequestService {
      */
     getConsumeByPod(pod : string) : Promise <any[]> {
         return new Promise( (resolve)=>{
-            const req = 'SELECT pod,month,year,energy_day,energy_night FROM master.invoice_monthly_history where pod = "'+pod+'"'+' ORDER BY year,month asc ';
+            const req = "SELECT pod,month,year,energy_day,energy_night FROM master.invoice_monthly_history where pod = '"+pod+"'"+" ORDER BY year,month asc ";
             console.log(req)
             this.managerPostgres.query(req).then((res)=>{
                 console.log(res)
