@@ -43,7 +43,7 @@ export class UploadController {
         }
     )
     )
-    //This function is used to copy the file in the folder 'uploadedFiles' into the right folder wich was chosen in the form. After the copy, the file is deleted in the folder 'uploadedFiles' to keep only the one that was copied . Form datas can be taken into the @body
+    //This function is used to copy the file in the folder 'uploadedFiles' into the right folder wich was chosen in the form. After the copy, the file is deleted in the folder 'uploadedFiles' to keep only the one that was copied . Form's datas can be taken into the @body
       async serveFile(@Param('fileName') fileName, @Body() resBody, @Res() res): Promise<any> {
         console.log(res.req.file);
         console.log(resBody.folder);
@@ -53,35 +53,25 @@ export class UploadController {
         //test if the folder customerId exist
         if (!fs.existsSync('./uploadedFiles/'+resBody.folder+'/'+resBody.customerId+'/')){
             fs.mkdirSync('./uploadedFiles/'+resBody.folder+'/'+resBody.customerId+'/');
-            console.log("customerId folder created")
         }
 
         //test if the folder POD exist
         if (!fs.existsSync('./uploadedFiles/'+resBody.folder+'/'+resBody.customerId+'/'+resBody.pod+'/')){
             fs.mkdirSync('./uploadedFiles/'+resBody.folder+'/'+resBody.customerId+'/'+resBody.pod+'/');
-            console.log("Pod folder created")
         }
-
         //copy the file into the right folder wich was chosen in the form
           await copyFile('./uploadedFiles/'+res.req.file.originalname,'./uploadedFiles/'+resBody.folder+'/'+resBody.customerId+'/'+resBody.pod+'/'+res.req.file.originalname, errCopy => {
-             if (true) {
-                 console.log("copied")
-             }
-             if (false) {
-                 console.log("error")
-                 console.log(errCopy)
-             }
-         })
-        // delete the file in the folder 'uploadedFiles' to keep only the one that was copied
-          await unlink('./uploadedFiles/'+res.req.file.originalname, errDelete => {
-            if (true) {
-                console.log("deleted")
-            }
-            if (false) {
-                console.log("error")
-                console.log(errDelete)
-            }
-        })
+             if (errCopy) throw errCopy;
+             console.log('copied')
+                  // delete the file in the folder 'uploadedFiles' to keep only the one that was copied
+                  unlink('./uploadedFiles/'+res.req.file.originalname, errDelete => {
+                      if (errDelete) throw errDelete;
+                      console.log('Deleted')
+                    }
+                  )
+          }
+         )
+
     }
 //
 // test(@Body() body){
