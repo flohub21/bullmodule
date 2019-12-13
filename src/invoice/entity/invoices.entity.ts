@@ -230,6 +230,9 @@ export class Invoices {
     created_at: string;
 
     @Column()
+    invoice_date_formatted: string;
+
+    @Column()
     updated_at: string;
 
     @Column()
