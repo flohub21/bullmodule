@@ -302,7 +302,7 @@ npm
             }
             if(body.filter.total_price_with_tax === undefined){
                 body.filter.total_price_with_tax = {};
-                body.filter.total_price_with_tax.operator = "<";
+                body.filter.total_price_with_tax.operator = "::float<";
                 body.filter.total_price_with_tax.value = "0";
             }
         }
