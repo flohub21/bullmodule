@@ -79,10 +79,10 @@ export class FilterService {
         if (value !== undefined && value !== null) {
             if (value === 'null') {
                 if (operator === '=') {
-                    return " invoices." + key + " is null ";
+                    return " " + key + " is null ";
                 }
                 if(operator === '!='){
-                    return " invoices." + key + " is not null ";
+                    return " " + key + " is not null ";
                 }
             }
             if (operator === "LIKE") {
@@ -94,7 +94,10 @@ export class FilterService {
             if (param.quote) {
                 value = "'" + value + "'";
             }
-            return " invoices." + key + " " + operator + " " + value + " ";
+            if(param.type !== undefined){
+                return " " + key +"::"+param.type+" " + operator + " " + value + " ";
+            }
+            return " " + key + " " + operator + " " + value + " ";
         }
         return '';
 

@@ -12,14 +12,12 @@ import * as moment from 'moment';
 @Controller('invoice')
 @Injectable()
 export class InvoiceController {
-npm
     constructor(private invoiceService: InvoiceService,
                 private customerCont: CustomerController) {}
 
     @Post('create')
     create(@Body() body) {
         let invoice = new Invoices();
-        invoice.invoice_ref = 'test';
         invoice.address = body.address;
         this.invoiceService.create(invoice).then((res: any) => {
             return res;
@@ -239,7 +237,6 @@ npm
         let listCustomer;
         let listId = [];
         let addDraftFilter = false;
-        console.log(body);
         for(let key in body.filter){
             if(key !== 'union'){
                 addDraftFilter = true;
@@ -287,7 +284,7 @@ npm
             }
         }
         // open amount
-        if(body.filter.open != undefined) {
+        if(body.filter.openAmount != undefined) {
             body.filter.payed = {};
             body.filter.payed.operator = '=';
             body.filter.payed.value = '0';
@@ -334,7 +331,6 @@ npm
         } else {
             throw new NoResultException();
         }
-    console.log(listInvoice.length);
         return listInvoice;
 
     }
@@ -354,8 +350,8 @@ npm
             let el:any = listInvoice[key];
             listId.push(el.customer_num);
             newInvoiceList.push(el);
-            if(! el.openAmount){
-                el.openAmount = +el.total_price_with_tax;
+            if(! el.openamount){
+                el.openamount = +el.total_price_with_tax;
             }
             //let user = await this.userCont.findOne({id:el.user_id})
             if(el.date !== null){
