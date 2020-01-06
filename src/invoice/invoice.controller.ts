@@ -12,7 +12,6 @@ import * as moment from 'moment';
 @Controller('invoice')
 @Injectable()
 export class InvoiceController {
-npm
     constructor(private invoiceService: InvoiceService,
                 private customerCont: CustomerController) {}
 
