@@ -9,13 +9,13 @@ import {FilterService} from "../core/service/filter.service";
 export class InvoiceService extends RequestService{
     repInvoicePostgres: any;
     schema: string = 'master';
-    reqSelect= "SELECT invoices.*, op.*, SUBSTRING(invoice_type,POSITION ( '_' in invoice_type)+1) as type," +
+    reqSelect= "SELECT * from (SELECT invoices.*, op.*, SUBSTRING(invoice_type,POSITION ( '_' in invoice_type)+1) as type," +
                " SUBSTRING(invoice_type,1,POSITION ( '_' in invoice_type)-1) as energy, " +
                " (SELECT new_balance FROM master.payments_list p WHERE p.invoice_ref = invoices.invoice_ref ORDER BY  p.created_at desc LIMIT 1 ) as openAmount"+
                " FROM master.invoices "+
                " LEFT JOIN (select o.date as operationDate, o.internal_comment as operationComment, st.description, st.status, o.id as operationId, o.more_information FROM master.operations_workflow o" +
                             " LEFT JOIN  master.operation_invoices_status st ON o.status_id = st.id) as op ON op.operationId = " +
-                            " (SELECT id from master.operations_workflow op where op.invoice_reference = master.invoices.invoice_ref ORDER BY  op.updated_at desc, op.date desc LIMIT 1) ";
+                            " (SELECT id from master.operations_workflow op where op.invoice_reference = master.invoices.invoice_ref ORDER BY  op.updated_at desc, op.date desc LIMIT 1)) as invoice ";
 
     constructor(private filter: FilterService) {
 
@@ -102,7 +102,7 @@ export class InvoiceService extends RequestService{
      * @param str string a part of invoice reference
      */
     search(str: string): Promise<Invoices[]>{
-        const req = this.reqSelect + " WHERE invoices.invoice_ref LIKE '%"+ str +"%' OR invoices.pod LIKE '%"+ str +"%' ORDER BY invoices.created_at desc LIMIT 12 ";
+        const req = this.reqSelect + " WHERE invoice_ref LIKE '%"+ str +"%' OR pod LIKE '%"+ str +"%' ORDER BY created_at desc LIMIT 12 ";
         console.log(req);
         return new Promise((resolve, reject) => {
             this.repInvoicePostgres.query(req).then((listInvoice) => {
@@ -172,6 +172,10 @@ export class InvoiceService extends RequestService{
         });
     }
 
+    /**
+     *  get invoice in database by several filter
+     * @param data any Filter
+     */
    findByFilter(data: any): Promise<Invoices[]>{
         let req = this.filter.generateRequest(this.reqSelect,data, 10000);
 

@@ -10,7 +10,7 @@ export class FilterService {
      * Generate request form object
      * @param data any filter object , used to generate the request
      */
-    generateRequest(reqSelect : string, data: any, limit: number = null) {
+    generateRequest(reqSelect : string, data: any, limit: number = null, alias: string=null) {
         let req = reqSelect + ' WHERE ';
         let reqWhere = '';
         let condOp: string;
@@ -34,11 +34,11 @@ export class FilterService {
                                 reqWhere += condOp;
                             }
 
-                            reqWhere += this.newCondition(data[key], key, data[key].operator[i], data[key].value[i]);
+                            reqWhere += this.newCondition(data[key], key, data[key].operator[i], data[key].value[i],alias);
                         }
                         reqWhere += ' ) ';
                     } else {
-                        reqWhere += this.newCondition(data[key], key, data[key].operator, data[key].value);
+                        reqWhere += this.newCondition(data[key], key, data[key].operator, data[key].value,alias);
                     }
                     firstCond1 = false;
                 }
@@ -75,14 +75,14 @@ export class FilterService {
      * @param operator
      * @param value
      */
-    newCondition(param, key, operator, value): string {
+    newCondition(param, key, operator, value, alias:string = null): string {
         if (value !== undefined && value !== null) {
             if (value === 'null') {
                 if (operator === '=') {
-                    return " invoices." + key + " is null ";
+                    return " " + key + " is null ";
                 }
                 if(operator === '!='){
-                    return " invoices." + key + " is not null ";
+                    return " " + key + " is not null ";
                 }
             }
             if (operator === "LIKE") {
@@ -94,10 +94,17 @@ export class FilterService {
             if (param.quote) {
                 value = "'" + value + "'";
             }
-            return " invoices." + key + " " + operator + " " + value + " ";
+            if(alias){
+                key = alias+'.'+key;
+            }
+            if(param.type !== undefined){
+                return " " + key +"::"+param.type+" " + operator + " " + value + " ";
+            }
+            return " " + key + " " + operator + " " + value + " ";
         }
         return '';
 
 
     }
+
 }

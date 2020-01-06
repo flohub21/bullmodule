@@ -18,7 +18,6 @@ export class InvoiceController {
     @Post('create')
     create(@Body() body) {
         let invoice = new Invoices();
-        invoice.invoice_ref = 'test';
         invoice.address = body.address;
         this.invoiceService.create(invoice).then((res: any) => {
             return res;
@@ -238,7 +237,6 @@ export class InvoiceController {
         let listCustomer;
         let listId = [];
         let addDraftFilter = false;
-        console.log(body);
         for(let key in body.filter){
             if(key !== 'union'){
                 addDraftFilter = true;
@@ -286,7 +284,7 @@ export class InvoiceController {
             }
         }
         // open amount
-        if(body.filter.open != undefined) {
+        if(body.filter.openAmount != undefined) {
             body.filter.payed = {};
             body.filter.payed.operator = '=';
             body.filter.payed.value = '0';
@@ -301,7 +299,7 @@ export class InvoiceController {
             }
             if(body.filter.total_price_with_tax === undefined){
                 body.filter.total_price_with_tax = {};
-                body.filter.total_price_with_tax.operator = "<";
+                body.filter.total_price_with_tax.operator = "::float<";
                 body.filter.total_price_with_tax.value = "0";
             }
         }
@@ -333,7 +331,6 @@ export class InvoiceController {
         } else {
             throw new NoResultException();
         }
-    console.log(listInvoice.length);
         return listInvoice;
 
     }
@@ -353,8 +350,8 @@ export class InvoiceController {
             let el:any = listInvoice[key];
             listId.push(el.customer_num);
             newInvoiceList.push(el);
-            if(! el.openAmount){
-                el.openAmount = +el.total_price_with_tax;
+            if(! el.openamount){
+                el.openamount = +el.total_price_with_tax;
             }
             //let user = await this.userCont.findOne({id:el.user_id})
             if(el.date !== null){
