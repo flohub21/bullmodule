@@ -3,12 +3,15 @@ import {RequestService} from "../core/service/request-service";
 import {Cm_contract} from "./entity/cm_contract.entity";
 import {AddressModel} from "./entity/address.model";
 import {Invoices} from "../invoice/entity/invoices.entity";
+import {FilterService} from "../core/service/filter.service";
 
 @Injectable()
 export class ContractService extends RequestService {
     schema = 'business';
     repContract: any;
-    constructor(){
+    reqSelect: string = " select co.*, a.* from business.cm_contract co " +
+                        " LEFT JOIN business.cm_addresses a ON a.pod = co.pod";
+    constructor(private filter: FilterService){
         super();
         this.createConnectionPostgres(this.schema).then(()=>{
             this.repContract = this.connectionPostgres.getRepository(Cm_contract);
@@ -134,6 +137,20 @@ export class ContractService extends RequestService {
                 console.log(res)
                 resolve(res);
             })
+        });
+    }
+
+    /**
+     *  get contract in database by several filter
+     * @param data any Filter
+     */
+    findByFilter(data: any): Promise<Invoices[]>{
+        let req = this.filter.generateRequest(this.reqSelect, data, 10000, 'co');
+        return new Promise((resolve, reject) => {
+            console.log(req);
+            this.repContract.query(req).then((listContract) => {
+                resolve(listContract);
+            });
         });
     }
 

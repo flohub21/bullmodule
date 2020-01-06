@@ -2,14 +2,14 @@ import {Body, Controller, Post, Get, Param} from '@nestjs/common';
 import {ContractService} from "./contract.service";
 import {Cm_contract} from "./entity/cm_contract.entity";
 import {AddressModel} from "./entity/address.model";
+import {FilterService} from "../core/service/filter.service";
 import {Invoices} from "../invoice/entity/invoices.entity";
 
 @Controller('contract')
 export class ContractController {
-    constructor(private contractService: ContractService){
+
+    constructor(private contractService: ContractService, private filter: FilterService){
     }
-
-
 
     @Post('update')
     async update(@Body() body){
@@ -121,6 +121,19 @@ export class ContractController {
         contract.deliveryAddress = addressD;
         contract.billingAddress = addressB;
         return contract;
+
+    }
+    @Post('find_filter')
+    async findByFilter(@Body() body){
+        if(body.filter.pod === undefined){
+           body.filter.pod = {};
+            body.filter.pod.operator = '!=';
+            body.filter.pod.value = '';
+            body.filter.pod.quote = true;
+
+        }
+        let listContract = await this.contractService.findByFilter(body.filter);
+        return listContract;
 
     }
 

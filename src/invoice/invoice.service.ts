@@ -172,6 +172,10 @@ export class InvoiceService extends RequestService{
         });
     }
 
+    /**
+     *  get invoice in database by several filter
+     * @param data any Filter
+     */
    findByFilter(data: any): Promise<Invoices[]>{
         let req = this.filter.generateRequest(this.reqSelect,data, 10000);
 
