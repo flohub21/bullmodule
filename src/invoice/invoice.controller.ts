@@ -7,12 +7,14 @@ import {Operations_workflow} from "../operations-workflow/entity/operations-work
 import {Operation_invoices_status} from "../operations-workflow/entity/Operation-invoices-status.entity";
 import { AuthGuard } from '@nestjs/passport';
 import * as moment from 'moment';
+import {PaymentsListController} from "../payments-list/payments-list.controller";
 
 @UseGuards(AuthGuard('jwt'))
 @Controller('invoice')
 @Injectable()
 export class InvoiceController {
     constructor(private invoiceService: InvoiceService,
+                private paymentCont: PaymentsListController,
                 private customerCont: CustomerController) {}
 
     @Post('create')
@@ -36,6 +38,21 @@ export class InvoiceController {
         return await this.saveStatus(body.invoices, body.status);
     }
 
+    async payInvoice(listInvoice: Invoices[]){
+        let ref: string[] = [];
+        let listOpenAmount: Number[] = [];
+        for(let i in listInvoice){
+            let openAmount = await this.paymentCont.getTotalOpenAmount(listInvoice[i].invoice_ref);
+            let payment:any = this.paymentController.getPaymentList(listInvoice[i].invoice_ref, openAmount, null , +res.id);
+            payment.date = listOperation[0].date;
+            payment.payment_method = listOperation[0].more_information;
+            resultTmp = await this.paymentController.create({payment: payment});
+            resultTmp.listOperation = [res];
+
+        }
+
+    }
+
     /**
      * update invoice with specific status
      * @param invoices
@@ -46,9 +63,20 @@ export class InvoiceController {
     saveStatus(invoices: Invoices[],status:string, idGroup: number = null, value:any = null){
         let ref = [];
         let data:any;
+        if(status === 'PAYED_INVOICE'){
+            return new Promise((resolve) => {
+                this.invoiceService.updateStatus(ref, data).then((res)=>{
+                    let ret:any = {};
+                    ret[data.key] = data.value;
+                    resolve(ret);
+                });
+            });
+        }
+
         invoices.forEach((invoice) => {
             ref.push(invoice.invoice_ref);
         });
+
         switch (status) {
             case 'VALID_INVOICE':
                 data = {
