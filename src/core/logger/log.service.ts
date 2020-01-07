@@ -16,7 +16,7 @@ export class LogService{
     managerPostgres: any;
 
     constructor() {
-        this.createConnectionPostgres().then(()=>{
+        this.createConnectionPostgres(this.schema).then(()=>{
             this.repLog = this.connectionPostgres.getRepository(Newbo_logs);
         })
     }

@@ -20,7 +20,7 @@ export class InvoiceService extends RequestService{
     constructor(private filter: FilterService) {
 
         super();
-        this.createConnectionPostgres().then(() => {
+        this.createConnectionPostgres(this.schema).then(() => {
             this.repInvoicePostgres = this.connectionPostgres.getRepository(Invoices);
         });
     }
@@ -199,10 +199,7 @@ export class InvoiceService extends RequestService{
             " THEN total_price_with_tax"+
             " ELSE (SELECT new_balance FROM master.payments_list p WHERE p.invoice_ref = invoices.invoice_ref ORDER BY  p.created_at desc LIMIT 1)"+
             " END ) as notPayed"+
-            " FROM  `master.invoices` where payed = 0 and canceled = 0 and customer_num =" + "'" + customerId + "' ORDER BY id DESC LIMIT 1";
-            //" FROM  `invoices` where show_my_eida = 1 and payed = 0 and canceled = 0 and customer_num =" + "'" + customerId + "' ORDER BY id DESC LIMIT 1";
-            /*const req = "SELECT sum(total_price_with_tax) as notPayed FROM `invoices` where show_my_eida = 1 and payed = 0 and canceled = 0 and customer_num =" + "'" + customerId + "' ORDER BY id DESC LIMIT 1";*/
-            //
+            " FROM  `master.invoices` where payed = '0' and canceled = '0' and customer_num =" + "'" + customerId + "' ORDER BY id DESC LIMIT 1";
             console.log(req);
             this.repInvoicePostgres.query(req).then((res) => {
                 resolve(res);

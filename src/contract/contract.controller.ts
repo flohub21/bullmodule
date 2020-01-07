@@ -32,21 +32,13 @@ export class ContractController {
     async search(str:string) {
 
         let listContract = await this.contractService.search(str);
-        listContract.forEach((el,key)=>{
-           listContract[key] = this.getContract(el);
-        });
-
-        return listContract
+        return this.createContractObject(listContract);
     }
 
     @Post("get_all_by_customer")
     async getAllByCustomerId(@Body() body){
         let listContract = await this.contractService.getAllByCustomerId(body.customerId);
-        listContract.forEach((el,key)=>{
-            listContract[key] = this.getContract(el);
-        });
-
-        return listContract;
+        return this.createContractObject(listContract);
     }
 
     /**
@@ -56,17 +48,24 @@ export class ContractController {
     @Get('get_all_contract')
     async getAllContract(): Promise<any[]> {
         const listContract = await this.contractService.getAllContract();
-
-        return listContract;
+        return this.createContractObject(listContract);
     }
 
-    async getAllByCustomerPod(listPod: string[]){
-        let listContract =  await this.contractService.getAllByPod(listPod);
+    /**
+     * create contract object
+     * @param listContract  any []
+     */
+    createContractObject(listContract: any[]){
         listContract.forEach((el,key)=>{
             listContract[key] = this.getContract(el);
         });
-
         return listContract;
+    }
+
+
+    async getAllByCustomerPod(listPod: string[]){
+        let listContract =  await this.contractService.getAllByPod(listPod);
+        return this.createContractObject(listContract);
     }
 
     @Get('address/autocomplete/:str')
@@ -84,6 +83,7 @@ export class ContractController {
         return await this.contractService.updateAddress(body.address, body.type, body.pod);
     }
 
+
     /**
      * Get consume for one pod, this is use in contract.service.ts in the function : getConsumeByPod
      */
@@ -91,6 +91,24 @@ export class ContractController {
     async getConsumeByPod(@Param() param): Promise<any[]> {
         const listConsumes = await this.contractService.getConsumeByPod(param.pod)
         return listConsumes;
+    }
+
+    /**
+     * Get price (SCC contract) for one contract, this is use in contract.service.ts in the function : getPriceHistoryById
+     */
+    @Get('get_price_history_by_id/:id')
+    async getPriceHistoryById(@Param() param): Promise<any[]> {
+        const listPrices = await this.contractService.getPriceHistoryById(param.id)
+        return listPrices;
+    }
+
+    /**
+     * Get price (ACC contract) for one contract, this is use in contract.service.ts in the function : getPriceById
+     */
+    @Get('get_price_by_id/:id')
+    async getPriceById(@Param() param): Promise<any[]> {
+        const listPrices = await this.contractService.getPriceById(param.id)
+        return listPrices;
     }
 
     /**

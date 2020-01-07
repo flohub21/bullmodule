@@ -56,8 +56,7 @@ export class ContractService extends RequestService {
 
     getAllContract(): Promise<any[]> {
         return new Promise((resolve, reject) => {
-            const req = "select co.* from business.cm_contract co";
-            console.log(req);
+            const req = "select co.*, adr.* from business.cm_contract co LEFT JOIN business.cm_addresses adr ON adr.pod = co.pod";
             this.managerPostgres.query(req).then((res) => {
                 resolve(res);
             });
@@ -140,6 +139,35 @@ export class ContractService extends RequestService {
         });
     }
 
+    /**
+     * get prices history (SCC) for one contract, use for onglet "Prix" list-contracts.component.ts and contract-customers.component.ts
+     * @param pod string
+     */
+    getPriceHistoryById(id : string) : Promise <any[]> {
+        return new Promise((resolve) => {
+            const req = "SELECT contract_id,start_agreement,end_agreement,price_date,price_normal,fixed_charges_energy,status,product_name,product_duration from business.price_history where contract_id = '" + id + "'" + "ORDER BY start_agreement desc";
+            console.log(req)
+            this.managerPostgres.query(req).then((res) => {
+                console.log(res)
+                resolve(res);
+            })
+        });
+    }
+
+    /**
+     * get prices (ACC) for one contract, use for onglet "Prix" list-contracts.component.ts and contract-customers.component.ts
+     * @param pod string
+     */
+    getPriceById(id : string) : Promise <any[]> {
+        return new Promise((resolve) => {
+            const req = "SELECT buy_price_day,buy_price_night,sell_price_day,sell_price_night,counting_price,end_date,type_price from business.cm_price where id = '" + id + "'" + "ORDER BY end_date Asc";
+            console.log(req)
+            this.managerPostgres.query(req).then((res) => {
+                console.log(res)
+                resolve(res);
+            })
+        });
+    }
     /**
      *  get contract in database by several filter
      * @param data any Filter

@@ -14,7 +14,7 @@ export class OperationsWorkflowService extends RequestService{
     constructor() {
 
         super();
-        this.createConnectionPostgres().then(() => {
+        this.createConnectionPostgres(this.schema).then(() => {
             this.repOperationStatus = this.connectionPostgres.getRepository(Operation_invoices_status);
             this.repOperation = this.connectionPostgres.getRepository(Operations_workflow);
             this.repRequest = this.connectionPostgres.getRepository(Request);

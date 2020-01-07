@@ -188,6 +188,7 @@ export class OperationsWorkflowController {
                         this.invoiceController.saveStatus(listInvoiceToUpdate, 'internal_payment_date',null, listOperation[0].date);
                         let resPayment = await this.invoiceController.saveStatus(listInvoiceToUpdate, listOperation[0].more_information);
                         resultTmp = {
+
                             payed: '1',
                             internal_payment_date:listOperation[0].date,
                             internal_payment_method: resPayment['internal_payment_method']
