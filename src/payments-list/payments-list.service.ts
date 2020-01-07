@@ -6,11 +6,11 @@ import {Payments_list} from "./entity/payments-list.entity";
 export class PaymentsListService  extends RequestService {
 
     repPaymentsList: any;
-
+    schema:string = 'master';
     constructor() {
 
         super();
-        this.createConnectionPostgres().then(() => {
+        this.createConnectionPostgres(this.schema).then(() => {
             this.repPaymentsList = this.connectionPostgres.getRepository(Payments_list);
         });
     }

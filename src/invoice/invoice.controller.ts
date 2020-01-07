@@ -53,28 +53,32 @@ export class InvoiceController {
             case 'VALID_INVOICE':
                 data = {
                     key:'canceled',
-                    value: '0'
+                    value: '0',
+                    text:true
                 };
                 break;
 
             case 'CANCEL_INVOICE':
                 data = {
                     key:'canceled',
-                    value: '1'
+                    value: '1',
+                    text:true
                 };
                 break;
 
             case 'PAYED_INVOICE':
                 data = {
                     key:'payed',
-                    value: '1'
+                    value: '1',
+                    text:true
                 };
                 break;
 
             case 'UNPAYED_INVOICE':
                 data = {
                     key:'payed',
-                    value: '0'
+                    value: '0',
+                    text:true
                 };
                 break;
 
