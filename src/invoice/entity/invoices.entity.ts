@@ -341,7 +341,7 @@ export class Invoices {
     status: string[];
     type:string;
     energy:string;
-    openAmount: number;
+    openamount: number;
     listOperation: Operations_workflow[];
 
 

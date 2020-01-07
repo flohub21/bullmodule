@@ -133,7 +133,6 @@ export class ContractService extends RequestService {
             const req = "SELECT pod,month,year,energy_day,energy_night FROM master.invoice_monthly_history where pod = '"+pod+"'"+" ORDER BY year,month asc ";
             console.log(req)
             this.managerPostgres.query(req).then((res)=>{
-                console.log(res)
                 resolve(res);
             })
         });
@@ -148,7 +147,6 @@ export class ContractService extends RequestService {
             const req = "SELECT contract_id,start_agreement,end_agreement,price_date,price_normal,fixed_charges_energy,status,product_name,product_duration from business.price_history where contract_id = '" + id + "'" + "ORDER BY start_agreement desc";
             console.log(req)
             this.managerPostgres.query(req).then((res) => {
-                console.log(res)
                 resolve(res);
             })
         });
@@ -163,7 +161,6 @@ export class ContractService extends RequestService {
             const req = "SELECT buy_price_day,buy_price_night,sell_price_day,sell_price_night,counting_price,end_date,type_price from business.cm_price where id = '" + id + "'" + "ORDER BY end_date Asc";
             console.log(req)
             this.managerPostgres.query(req).then((res) => {
-                console.log(res)
                 resolve(res);
             })
         });

@@ -13,9 +13,7 @@ export class MyLoggerService  implements Logger {
     mailUser: string;
     logService: LogService =  new LogService();
 
-    constructor(){
-        console.log('new my logger service');
-    }
+    constructor(){}
 
     /**
      * read data from csv file

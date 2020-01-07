@@ -14,6 +14,7 @@ export class PaymentsListController {
 
     @Post('create')
     async create(@Body() body) {
+
         body.payment.delete = 0;
         body.payment.payment_type = "Payment";
         let openAmount = await this.getTotalOpenAmount(body.payment.invoice_ref);
@@ -69,6 +70,10 @@ export class PaymentsListController {
                 });
             });
         });
+
+    }
+
+    saveNewPayment(){
 
     }
 }

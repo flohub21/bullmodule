@@ -7,14 +7,12 @@ import {Operations_workflow} from "../operations-workflow/entity/operations-work
 import {Operation_invoices_status} from "../operations-workflow/entity/Operation-invoices-status.entity";
 import { AuthGuard } from '@nestjs/passport';
 import * as moment from 'moment';
-import {PaymentsListController} from "../payments-list/payments-list.controller";
 
 @UseGuards(AuthGuard('jwt'))
 @Controller('invoice')
 @Injectable()
 export class InvoiceController {
     constructor(private invoiceService: InvoiceService,
-                private paymentCont: PaymentsListController,
                 private customerCont: CustomerController) {}
 
     @Post('create')
@@ -42,12 +40,12 @@ export class InvoiceController {
         let ref: string[] = [];
         let listOpenAmount: Number[] = [];
         for(let i in listInvoice){
-            let openAmount = await this.paymentCont.getTotalOpenAmount(listInvoice[i].invoice_ref);
+           /* let openAmount = await this.paymentCont.getTotalOpenAmount(listInvoice[i].invoice_ref);
             let payment:any = this.paymentController.getPaymentList(listInvoice[i].invoice_ref, openAmount, null , +res.id);
             payment.date = listOperation[0].date;
             payment.payment_method = listOperation[0].more_information;
             resultTmp = await this.paymentController.create({payment: payment});
-            resultTmp.listOperation = [res];
+            resultTmp.listOperation = [res];*/
 
         }
 
@@ -63,15 +61,7 @@ export class InvoiceController {
     saveStatus(invoices: Invoices[],status:string, idGroup: number = null, value:any = null){
         let ref = [];
         let data:any;
-        if(status === 'PAYED_INVOICE'){
-            return new Promise((resolve) => {
-                this.invoiceService.updateStatus(ref, data).then((res)=>{
-                    let ret:any = {};
-                    ret[data.key] = data.value;
-                    resolve(ret);
-                });
-            });
-        }
+
 
         invoices.forEach((invoice) => {
             ref.push(invoice.invoice_ref);
@@ -316,7 +306,7 @@ export class InvoiceController {
             }
         }
         // open amount
-        if(body.filter.openAmount != undefined) {
+        if(body.filter.openamount != undefined) {
             body.filter.payed = {};
             body.filter.payed.operator = '=';
             body.filter.payed.value = '0';
@@ -346,8 +336,8 @@ export class InvoiceController {
         if(body.filter.open !== undefined) {
             let lst: Invoices[] = [];
             listInvoice.forEach((invoice) => {
-                if (invoice.openAmount != null) {
-                    if (invoice.openAmount >= body.filter.open.value[0] && invoice.openAmount <= body.filter.open.value[1]) {
+                if (invoice.openamount != null) {
+                    if (invoice.openamount >= body.filter.open.value[0] && invoice.openamount <= body.filter.open.value[1]) {
                         lst.push(invoice);
                     }
                 } else {

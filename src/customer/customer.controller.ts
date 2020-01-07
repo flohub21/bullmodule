@@ -57,7 +57,6 @@ export class CustomerController {
     @Post('upload')
     @UseInterceptors(FileInterceptor('test'))
     uploadFile(@UploadedFile() file) {
-        console.log(file);
     }
 
 }

@@ -11,7 +11,7 @@ export class InvoiceService extends RequestService{
     schema: string = 'master';
     reqSelect= "SELECT * from (SELECT invoices.*, op.*, SUBSTRING(invoice_type,POSITION ( '_' in invoice_type)+1) as type," +
                " SUBSTRING(invoice_type,1,POSITION ( '_' in invoice_type)-1) as energy, " +
-               " (SELECT new_balance FROM master.payments_list p WHERE p.invoice_ref = invoices.invoice_ref ORDER BY  p.created_at desc LIMIT 1 ) as openAmount"+
+               " (SELECT new_balance FROM master.payments_list p WHERE p.invoice_ref = invoices.invoice_ref ORDER BY  p.created_at desc LIMIT 1 ) as openamount"+
                " FROM master.invoices "+
                " LEFT JOIN (select o.date as operationDate, o.internal_comment as operationComment, st.description, st.status, o.id as operationId, o.more_information FROM master.operations_workflow o" +
                             " LEFT JOIN  master.operation_invoices_status st ON o.status_id = st.id) as op ON op.operationId = " +
@@ -182,7 +182,6 @@ export class InvoiceService extends RequestService{
         return new Promise((resolve, reject) => {
             console.log(req);
             this.repInvoicePostgres.query(req).then((listInvoice) => {
-                console.log('result');
              resolve(listInvoice);
             });
         });

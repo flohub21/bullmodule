@@ -68,7 +68,6 @@ export class OperationsWorkflowController {
     async create(@Body() body) {
         let listOperation: Operations_workflow[] = body.operation;
         let result: any = [];
-        let idGroup: number;
         let resultTmp: any;
         let saveSameOperation: boolean = true;
         let listInvoiceToUpdate:Invoices[] = [];
@@ -78,7 +77,7 @@ export class OperationsWorkflowController {
 
             listOperation[key].user_id = listOperation[key].user.id;
             listOperation[key].status_id = listOperation[key].status.id;
-            if (listOperation[key].status.status === 'CREDIT_NOTE' || listOperation[key].status.status === 'GENERATE_CREDIT_NOTE_REFUND') {
+            if (listOperation[key].status.status === 'CREDIT_NOTE') {
                 saveSameOperation = false;
 
                 let request = await this.saveRequest(listOperation[key], 'ANULATION');
@@ -132,7 +131,7 @@ export class OperationsWorkflowController {
                 });
             }
         }
-        // specific case
+        // payed invoice with the payment type = contract payment type
         if(defaultOperation.status.status === 'PAYED_INVOICE' && ! defaultOperation.more_information){
             saveSameOperation = false;
             // save status for all invoice
@@ -176,6 +175,12 @@ export class OperationsWorkflowController {
        return result;
     }
 
+    /**
+     * save exactly the same status for each invoices
+     * @param listOperation
+     * @param listInvoiceToUpdate
+     * @param result
+     */
     async saveSameStatusForInvoices(listOperation: Operations_workflow[], listInvoiceToUpdate: Invoices[], result: any[]){
         let resultTmp: any;
         let idGroup:number;

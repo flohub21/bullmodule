@@ -24,7 +24,6 @@ export class UserService  extends RequestService {
     findOne(id: string): Promise<Users> {
         return new Promise((resolve, reject) => {
             this.repUser.findOne(id).then((rs) => {
-                console.log(rs);
                 resolve(rs);
             });
         });

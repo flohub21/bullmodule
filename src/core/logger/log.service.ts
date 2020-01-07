@@ -45,7 +45,6 @@ export class LogService{
 
 
     saveRequest(req: Newbo_logs){
-        console.log('save -----');
         console.log(req);
        // console.log(this.repLog.save(req).getSql());
         return this.repLog.save(req);
