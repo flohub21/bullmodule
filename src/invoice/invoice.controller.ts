@@ -180,6 +180,14 @@ export class InvoiceController {
                 };
                 break;
 
+            case 'NEW_PAYMENT':
+                data = {
+                    key:'left_to_pay',
+                    value: value+'',
+                    text:true
+                };
+                break;
+
             default:
                 data = {
                     key: status,
@@ -365,23 +373,23 @@ export class InvoiceController {
      * @return Invoices[] with alll data
      */
 
-    async trtListInvoice(listInvoice: Invoices[], listCustomer: any[] = null){
+    async trtListInvoice(listInvoice: Invoices[], listCustomer: any[] = null){;
         let listId = [];
         let newInvoiceList: Invoices[] = [];
         for(let key in listInvoice){
             let el:any = listInvoice[key];
             listId.push(el.customer_num);
             newInvoiceList.push(el);
-            if(! el.openamount){
+            /*if(! el.openamount){
                 el.openamount = +el.total_price_with_tax;
-            }
+            }*/
             //let user = await this.userCont.findOne({id:el.user_id})
             if(el.date !== null){
                 let op: Operations_workflow = new Operations_workflow();
                 op.status = new Operation_invoices_status();
-                op.date = el.operationDate;
+                op.date = el.operationdate;
                 op.status.description = el.description;
-                op.internal_comment = el.operationComment;
+                op.internal_comment = el.operationcomment;
                 op.status.status = el.status;
                 op.more_information = el.more_information;
                 el.listOperation = [op];

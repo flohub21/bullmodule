@@ -89,7 +89,7 @@ export class OperationsWorkflowController {
                 listOperation[key].more_information =  (+res[0].nb + 1) + '';
             }
             let res: Operations_workflow = await this.operationService.save(listOperation[key]);
-
+            listOperation[key].id = res.id;
             let falseInvoice = new Invoices();
             falseInvoice.invoice_ref = res.invoice_reference;
             listInvoiceToUpdate.push(falseInvoice);
@@ -102,12 +102,11 @@ export class OperationsWorkflowController {
                 switch (res.status.status) {
                     case "NEW_PAYMENT": {
                         saveSameOperation = false;
-                        let payment:any = this.paymentController.getPaymentList(res.invoice_reference, body.payment, res.internal_comment, +res.id);
+                        let payment:any = this.paymentController.getPayment(res.invoice_reference, body.payment, res.internal_comment, +res.id);
                         payment.date = listOperation[0].date;
                         payment.payment_method = listOperation[0].more_information;
                         resultTmp = await this.paymentController.create({payment: payment});
                         resultTmp.listOperation = [res];
-
                         result.push(resultTmp);
                         break;
                     }
@@ -137,6 +136,7 @@ export class OperationsWorkflowController {
             // save status for all invoice
             this.invoiceController.saveStatus(listInvoiceToUpdate, listOperation[0].status.status);
             this.invoiceController.saveStatus(listInvoiceToUpdate, 'internal_payment_date', null, listOperation[0].date);
+            this.invoiceController.saveStatus(listInvoiceToUpdate, 'NEW_PAYMENT', null, 0);
             let invoiceSepa: Invoices[] = [];
             let invoiceTransfer: Invoices[] = [];
             let listInvoice: any[];
@@ -145,7 +145,7 @@ export class OperationsWorkflowController {
             } else {
                 listInvoice = await this.invoiceService.getAllByRef(listInvoiceRef);
             }
-
+            let index = 0;
             listInvoice.forEach((invoice: Invoices)=>{
                 resultTmp = {
                     payed: '1',
@@ -159,8 +159,12 @@ export class OperationsWorkflowController {
                     invoiceSepa.push(invoice);
                     resultTmp.internal_payment_method = 'SEPA';
                 }
-                result.push(resultTmp);
 
+                this.paymentController.saveNewPayment(null,invoice.left_to_pay, invoice.invoice_ref, null, defaultOperation.internal_comment, +listOperation[index].id, resultTmp.internal_payment_method );
+
+                resultTmp.left_to_pay = 0;
+                result.push(resultTmp);
+                index ++;
             });
             if(invoiceSepa.length > 0){
                 this.invoiceController.saveStatus(invoiceSepa, 'SEPA');
@@ -168,10 +172,12 @@ export class OperationsWorkflowController {
             if(invoiceTransfer.length > 0){
                 this.invoiceController.saveStatus(invoiceTransfer, 'TRANSFER');
             }
+            this.invoiceController.saveStatus(listInvoice, 'NEW_PAYMENT', null, 0);
         }
         if(saveSameOperation){
            result = await this.saveSameStatusForInvoices(listOperation, listInvoiceToUpdate, result);
         }
+        console.log(result);
        return result;
     }
 
@@ -191,12 +197,20 @@ export class OperationsWorkflowController {
                     if(listOperation[0].more_information){
                         this.invoiceController.saveStatus(listInvoiceToUpdate, listOperation[0].status.status);
                         this.invoiceController.saveStatus(listInvoiceToUpdate, 'internal_payment_date',null, listOperation[0].date);
+                        this.invoiceController.saveStatus(listInvoiceToUpdate, 'NEW_PAYMENT', null, 0);
                         let resPayment = await this.invoiceController.saveStatus(listInvoiceToUpdate, listOperation[0].more_information);
+                        let index = 0;
+                        listInvoiceToUpdate.forEach((invoice)=>{
+                            this.paymentController.saveNewPayment(null,invoice.left_to_pay, invoice.invoice_ref, null, listOperation[0].internal_comment, +listOperation[index].id, listOperation[0].more_information );
+                            index ++;
+                        });
+
                         resultTmp = {
 
                             payed: '1',
                             internal_payment_date:listOperation[0].date,
-                            internal_payment_method: resPayment['internal_payment_method']
+                            internal_payment_method: resPayment['internal_payment_method'],
+                            left_to_pay: 0
                         };
 
                     }

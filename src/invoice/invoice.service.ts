@@ -9,13 +9,15 @@ import {FilterService} from "../core/service/filter.service";
 export class InvoiceService extends RequestService{
     repInvoicePostgres: any;
     schema: string = 'master';
-    reqSelect= "SELECT * from (SELECT invoices.*, op.*, SUBSTRING(invoice_type,POSITION ( '_' in invoice_type)+1) as type," +
+    reqSelect= "SELECT * from " +
+               " (SELECT invoices.*, op.*, SUBSTRING(invoice_type,POSITION ( '_' in invoice_type)+1) as type," +
                " SUBSTRING(invoice_type,1,POSITION ( '_' in invoice_type)-1) as energy, " +
                " (SELECT new_balance FROM master.payments_list p WHERE p.invoice_ref = invoices.invoice_ref ORDER BY  p.created_at desc LIMIT 1 ) as openamount"+
                " FROM master.invoices "+
                " LEFT JOIN (select o.date as operationDate, o.internal_comment as operationComment, st.description, st.status, o.id as operationId, o.more_information FROM master.operations_workflow o" +
                             " LEFT JOIN  master.operation_invoices_status st ON o.status_id = st.id) as op ON op.operationId = " +
-                            " (SELECT id from master.operations_workflow op where op.invoice_reference = master.invoices.invoice_ref ORDER BY  op.updated_at desc, op.date desc LIMIT 1)) as invoice ";
+                            " (SELECT id from master.operations_workflow op where op.invoice_reference = master.invoices.invoice_ref ORDER BY  op.updated_at desc, op.date desc LIMIT 1)" +
+                " order by invoices.invoice_date_formatted desc, invoices.id) as invoice ";
 
     constructor(private filter: FilterService) {
 
@@ -62,7 +64,9 @@ export class InvoiceService extends RequestService{
      */
    updateStatus(ref: string[], data: any): Promise<any> {
        let req = '';
-
+        console.log('updateStatus');
+        console.log(ref);
+        console.log(data);
         if(data.text){
             req = "update master.invoices set "+ data.key+ " = '"+this.parseStringToSql(data.value) + "' where invoice_ref IN (" + this.getINForSql(ref) + ")";
         } else {
@@ -93,6 +97,16 @@ export class InvoiceService extends RequestService{
         return new Promise((resolve, reject) => {
             this.repInvoicePostgres.findOne(ref).then((rs) => {
                 resolve(rs);
+            });
+        });
+    }
+
+    getAllById(listId: string[]): Promise<Invoices>{
+        const req = this.reqSelect + " WHERE id IN ("+this.getINForSql(listId)+")";
+        console.log(req);
+        return new Promise((resolve) => {
+            this.repInvoicePostgres.query(req).then((listInvoice) => {
+                resolve(listInvoice);;
             });
         });
     }

@@ -8,7 +8,6 @@ export class UserController {
 
     @Get('find_by_id/:id')
     async findOne(@Param() param){
-        console.log('user : find one ');
         return await this.userService.findOne(param.id);
     }
 

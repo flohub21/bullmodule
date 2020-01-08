@@ -15,10 +15,6 @@ export class PaymentsListController {
     @Post('create')
     async create(@Body() body) {
 
-        body.payment.delete = 0;
-        body.payment.payment_type = "Payment";
-        let openAmount = await this.getTotalOpenAmount(body.payment.invoice_ref);
-        body.payment.new_balance = +(openAmount - (+body.payment.amount_paid)).toFixed(2);
         let invoice : Invoices;
         invoice = new Invoices();
         invoice.invoice_ref = body.payment.invoice_ref;
@@ -26,13 +22,15 @@ export class PaymentsListController {
            invoice = await this.invoiceController.find(invoice);
             if(invoice.payment_method === "Virement bancaire"){
                 body.payment.payment_method  = "TRANSFER";
+
             } else {
                 body.payment.payment_method  = "SEPA"
             }
         }
-        await this.paymentsListService.save(body.payment);
+        body.payment = await this.saveNewPayment(body.payment, invoice.left_to_pay);
+        await this.invoiceController.saveStatus([invoice], 'NEW_PAYMENT', null, body.payment.new_balance);
         let result: any = {
-            openAmount : body.payment.new_balance
+            left_to_pay : body.payment.new_balance
         };
         if(body.payment.new_balance <= 0){
 
@@ -46,15 +44,18 @@ export class PaymentsListController {
            result.internal_payment_method = body.payment.payment_method;
            result.internal_payment_date = body.payment.date;
         }
+        console.log('result payment : ');
+        console.log(result);
         return result;
     }
 
-    getPaymentList(invoice_ref: string, amount: number,comment:string, operation_id: number): Payments_list{
-        let payment = new Payments_list();
+    getPayment(invoice_ref: string, amount: number,comment:string, operation_id: number, payment_method: string = ''): Payments_list{
+        let payment:Payments_list = new Payments_list();
         payment.invoice_ref = invoice_ref;
         payment.amount_paid = amount+"";
         payment.extra_comment = comment;
         payment.operation_id = operation_id;
+        payment.payment_method = payment_method;
         return payment;
     }
 
@@ -73,8 +74,32 @@ export class PaymentsListController {
 
     }
 
-    saveNewPayment(){
+    /**
+     * Save new payment in database
+     * @param paymentObj Payment_list object to save in the DB if null the other parameters are mandatory
+     * @param invoice_ref string
+     * @param amount  number if null this payment pay the invoice completely
+     * @param comment string
+     * @param operation_id number id of of the operation_workflow in the DB
+     * @param payment_method string
+     */
+    async saveNewPayment(paymentObj: Payments_list = null,openAmount: any,  invoice_ref:string = null, amount:number = null, comment:string = null, operation_id: number=null, payment_method: string= null){
+        if(paymentObj === null){
+            paymentObj = this.getPayment(invoice_ref, amount, comment, operation_id, payment_method);
+        }
 
+        paymentObj.deleted = false;
+        paymentObj.payment_type = "Payment";
+
+        if(paymentObj.amount_paid !== null){
+            paymentObj.new_balance = (openAmount - +paymentObj.amount_paid).toFixed(2)+'';
+        } else {
+            paymentObj.new_balance = '0';
+            paymentObj.amount_paid = openAmount+'';
+        }
+
+        await this.paymentsListService.save(paymentObj);
+        return paymentObj;
     }
 }
 
