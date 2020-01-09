@@ -18,8 +18,8 @@ export class PaymentsListController {
         let invoice : Invoices;
         invoice = new Invoices();
         invoice.invoice_ref = body.payment.invoice_ref;
+        invoice = await this.invoiceController.find(invoice);
         if(!body.payment.payment_method){
-           invoice = await this.invoiceController.find(invoice);
             if(invoice.payment_method === "Virement bancaire"){
                 body.payment.payment_method  = "TRANSFER";
 
@@ -27,6 +27,7 @@ export class PaymentsListController {
                 body.payment.payment_method  = "SEPA"
             }
         }
+
         body.payment = await this.saveNewPayment(body.payment, invoice.left_to_pay);
         await this.invoiceController.saveStatus([invoice], 'NEW_PAYMENT', null, body.payment.new_balance);
         let result: any = {
@@ -44,15 +45,17 @@ export class PaymentsListController {
            result.internal_payment_method = body.payment.payment_method;
            result.internal_payment_date = body.payment.date;
         }
-        console.log('result payment : ');
-        console.log(result);
         return result;
     }
 
-    getPayment(invoice_ref: string, amount: number,comment:string, operation_id: number, payment_method: string = ''): Payments_list{
+    getPayment(invoice_ref: string, amount: number = null ,comment:string, operation_id: number, payment_method: string = ''): Payments_list{
         let payment:Payments_list = new Payments_list();
         payment.invoice_ref = invoice_ref;
-        payment.amount_paid = amount+"";
+        if(amount !==null){
+            payment.amount_paid = amount+"";
+        } else {
+            payment.amount_paid = null;
+        }
         payment.extra_comment = comment;
         payment.operation_id = operation_id;
         payment.payment_method = payment_method;
@@ -90,8 +93,8 @@ export class PaymentsListController {
 
         paymentObj.deleted = false;
         paymentObj.payment_type = "Payment";
-
         if(paymentObj.amount_paid !== null){
+            console.log('new balance');
             paymentObj.new_balance = (openAmount - +paymentObj.amount_paid).toFixed(2)+'';
         } else {
             paymentObj.new_balance = '0';

@@ -101,6 +101,7 @@ export class OperationsWorkflowController {
             if (res.status.status.indexOf('SEPA_') === -1 && res.status.status !== 'CANCEL_DOM') {
                 switch (res.status.status) {
                     case "NEW_PAYMENT": {
+                        console.log('new Payment');
                         saveSameOperation = false;
                         let payment:any = this.paymentController.getPayment(res.invoice_reference, body.payment, res.internal_comment, +res.id);
                         payment.date = listOperation[0].date;
@@ -159,7 +160,7 @@ export class OperationsWorkflowController {
                     invoiceSepa.push(invoice);
                     resultTmp.internal_payment_method = 'SEPA';
                 }
-
+                console.log('left to pay : ' + invoice.left_to_pay);
                 this.paymentController.saveNewPayment(null,invoice.left_to_pay, invoice.invoice_ref, null, defaultOperation.internal_comment, +listOperation[index].id, resultTmp.internal_payment_method );
 
                 resultTmp.left_to_pay = 0;
@@ -175,7 +176,7 @@ export class OperationsWorkflowController {
             this.invoiceController.saveStatus(listInvoice, 'NEW_PAYMENT', null, 0);
         }
         if(saveSameOperation){
-           result = await this.saveSameStatusForInvoices(listOperation, listInvoiceToUpdate, result);
+           result = await this.saveSameStatusForInvoices(listOperation, listInvoiceToUpdate, result, listInvoiceRef);
         }
         console.log(result);
        return result;
@@ -184,10 +185,10 @@ export class OperationsWorkflowController {
     /**
      * save exactly the same status for each invoices
      * @param listOperation
-     * @param listInvoiceToUpdate
+     * @param listInvoiceToUpdate Invoices[] contains only the invoice reference
      * @param result
      */
-    async saveSameStatusForInvoices(listOperation: Operations_workflow[], listInvoiceToUpdate: Invoices[], result: any[]){
+    async saveSameStatusForInvoices(listOperation: Operations_workflow[], listInvoiceToUpdate: Invoices[], result: any[], listInvoiceRef: string[]){
         let resultTmp: any;
         let idGroup:number;
         // save the same thing in all invoice ( only one request for all status)
@@ -200,10 +201,14 @@ export class OperationsWorkflowController {
                         this.invoiceController.saveStatus(listInvoiceToUpdate, 'NEW_PAYMENT', null, 0);
                         let resPayment = await this.invoiceController.saveStatus(listInvoiceToUpdate, listOperation[0].more_information);
                         let index = 0;
-                        listInvoiceToUpdate.forEach((invoice)=>{
-                            this.paymentController.saveNewPayment(null,invoice.left_to_pay, invoice.invoice_ref, null, listOperation[0].internal_comment, +listOperation[index].id, listOperation[0].more_information );
-                            index ++;
-                        });
+                       this.invoiceService.getAllByRef(listInvoiceRef).then((listInvoice)=>{
+                           listInvoice.forEach((invoice)=>{
+
+                               this.paymentController.saveNewPayment(null,invoice.left_to_pay, invoice.invoice_ref, null, listOperation[0].internal_comment, +listOperation[index].id, listOperation[0].more_information );
+                               index ++;
+                           });
+                       });
+
 
                         resultTmp = {
 
