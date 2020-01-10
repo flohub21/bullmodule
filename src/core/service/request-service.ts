@@ -9,6 +9,7 @@ export abstract class  RequestService {
     managerPostgres: any;
 
     static firstCall: boolean = true;
+    static userId: number;
     static logService = new MyLoggerService();
 
     /**

@@ -64,9 +64,6 @@ export class InvoiceService extends RequestService{
      */
    updateStatus(ref: string[], data: any): Promise<any> {
        let req = '';
-        console.log('updateStatus');
-        console.log(ref);
-        console.log(data);
         if(data.text){
             req = "update master.invoices set "+ data.key+ " = '"+this.parseStringToSql(data.value) + "' where invoice_ref IN (" + this.getINForSql(ref) + ")";
         } else {

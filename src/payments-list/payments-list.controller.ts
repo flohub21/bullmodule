@@ -94,7 +94,6 @@ export class PaymentsListController {
         paymentObj.deleted = false;
         paymentObj.payment_type = "Payment";
         if(paymentObj.amount_paid !== null){
-            console.log('new balance');
             paymentObj.new_balance = (openAmount - +paymentObj.amount_paid).toFixed(2)+'';
         } else {
             paymentObj.new_balance = '0';

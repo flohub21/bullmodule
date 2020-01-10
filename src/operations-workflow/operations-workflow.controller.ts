@@ -14,6 +14,7 @@ import {InvoiceService} from "../invoice/invoice.service";
 const NodeCache = require( "node-cache" );
 const myCache = new NodeCache();
 import { AuthGuard } from '@nestjs/passport';
+import {RequestService} from "../core/service/request-service";
 
 
 @UseGuards(AuthGuard('jwt'))
@@ -75,7 +76,7 @@ export class OperationsWorkflowController {
         let listInvoiceRef: string[] = [];
         for (let key in listOperation) {
 
-            listOperation[key].user_id = listOperation[key].user.id;
+            listOperation[key].user_id = RequestService.userId;
             listOperation[key].status_id = listOperation[key].status.id;
             if (listOperation[key].status.status === 'CREDIT_NOTE') {
                 saveSameOperation = false;
@@ -101,7 +102,6 @@ export class OperationsWorkflowController {
             if (res.status.status.indexOf('SEPA_') === -1 && res.status.status !== 'CANCEL_DOM') {
                 switch (res.status.status) {
                     case "NEW_PAYMENT": {
-                        console.log('new Payment');
                         saveSameOperation = false;
                         let payment:any = this.paymentController.getPayment(res.invoice_reference, body.payment, res.internal_comment, +res.id);
                         payment.date = listOperation[0].date;
@@ -160,7 +160,6 @@ export class OperationsWorkflowController {
                     invoiceSepa.push(invoice);
                     resultTmp.internal_payment_method = 'SEPA';
                 }
-                console.log('left to pay : ' + invoice.left_to_pay);
                 this.paymentController.saveNewPayment(null,invoice.left_to_pay, invoice.invoice_ref, null, defaultOperation.internal_comment, +listOperation[index].id, resultTmp.internal_payment_method );
 
                 resultTmp.left_to_pay = 0;
@@ -178,7 +177,6 @@ export class OperationsWorkflowController {
         if(saveSameOperation){
            result = await this.saveSameStatusForInvoices(listOperation, listInvoiceToUpdate, result, listInvoiceRef);
         }
-        console.log(result);
        return result;
     }
 

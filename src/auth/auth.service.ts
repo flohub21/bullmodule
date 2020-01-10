@@ -26,6 +26,10 @@ export class AuthService {
         return null;
     }
 
+    /**
+     * log the user and create the token
+     * @param user
+     */
     async login(user: Users) {
         const payload = { username: user.email, sub: user.id};
         return {
