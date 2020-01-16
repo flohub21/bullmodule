@@ -160,9 +160,9 @@ export class OperationsWorkflowController {
                     invoiceSepa.push(invoice);
                     resultTmp.internal_payment_method = 'SEPA';
                 }
-                this.paymentController.saveNewPayment(null,invoice.left_to_pay, invoice.invoice_ref, null, defaultOperation.internal_comment, +listOperation[index].id, resultTmp.internal_payment_method );
+                this.paymentController.saveNewPayment(null,invoice.balance_in_progress, invoice.invoice_ref, null, defaultOperation.internal_comment, +listOperation[index].id, resultTmp.internal_payment_method );
 
-                resultTmp.left_to_pay = 0;
+                resultTmp.balance_in_progress = 0;
                 result.push(resultTmp);
                 index ++;
             });
@@ -191,7 +191,7 @@ export class OperationsWorkflowController {
         let idGroup:number;
         // save the same thing in all invoice ( only one request for all status)
             switch (listOperation[0].status.status) {
-
+                // payed invoice is the payment method is selected
                 case 'PAYED_INVOICE': {
                     if(listOperation[0].more_information){
                         this.invoiceController.saveStatus(listInvoiceToUpdate, listOperation[0].status.status);
@@ -201,8 +201,7 @@ export class OperationsWorkflowController {
                         let index = 0;
                        this.invoiceService.getAllByRef(listInvoiceRef).then((listInvoice)=>{
                            listInvoice.forEach((invoice)=>{
-
-                               this.paymentController.saveNewPayment(null,invoice.left_to_pay, invoice.invoice_ref, null, listOperation[0].internal_comment, +listOperation[index].id, listOperation[0].more_information );
+                               this.paymentController.saveNewPayment(null,invoice.balance_in_progress, invoice.invoice_ref, null, listOperation[0].internal_comment, +listOperation[index].id, listOperation[0].more_information );
                                index ++;
                            });
                        });
@@ -213,7 +212,7 @@ export class OperationsWorkflowController {
                             payed: '1',
                             internal_payment_date:listOperation[0].date,
                             internal_payment_method: resPayment['internal_payment_method'],
-                            left_to_pay: 0
+                            balance_in_progress: 0
                         };
 
                     }

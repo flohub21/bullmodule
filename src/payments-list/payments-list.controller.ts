@@ -28,17 +28,16 @@ export class PaymentsListController {
             }
         }
 
-        body.payment = await this.saveNewPayment(body.payment, invoice.left_to_pay);
+        body.payment = await this.saveNewPayment(body.payment, invoice.balance_in_progress);
         await this.invoiceController.saveStatus([invoice], 'NEW_PAYMENT', null, body.payment.new_balance);
         let result: any = {
-            left_to_pay : body.payment.new_balance
+            balance_in_progress : body.payment.new_balance
         };
         if(body.payment.new_balance <= 0){
 
             await this.invoiceController.saveStatus([invoice],'PAYED_INVOICE');
             await this.invoiceController.saveStatus([invoice], 'internal_payment_date',null, body.payment.date);
             await this.invoiceController.saveStatus([invoice], body.payment.payment_method);
-
 
            result.payed = '1';
            result.status = 'payed';
@@ -99,7 +98,6 @@ export class PaymentsListController {
             paymentObj.new_balance = '0';
             paymentObj.amount_paid = openAmount+'';
         }
-
         await this.paymentsListService.save(paymentObj);
         return paymentObj;
     }

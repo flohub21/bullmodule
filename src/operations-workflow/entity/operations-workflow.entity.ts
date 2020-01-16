@@ -51,6 +51,7 @@ export class Operations_workflow{
         status.id = op.status_id;
         status.description = op.description;
         status.status = op.status;
+        status.type = op.type;
         newOp.status = status;
         newOp.user = user;
         return newOp;

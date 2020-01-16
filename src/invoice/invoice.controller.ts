@@ -182,7 +182,7 @@ export class InvoiceController {
 
             case 'NEW_PAYMENT':
                 data = {
-                    key:'left_to_pay',
+                    key:'balance_in_progress',
                     value: value+'',
                     text:true
                 };
@@ -373,7 +373,7 @@ export class InvoiceController {
      * @return Invoices[] with alll data
      */
 
-    async trtListInvoice(listInvoice: Invoices[], listCustomer: any[] = null){;
+    async trtListInvoice(listInvoice: Invoices[], listCustomer: any[] = null){
         let listId = [];
         let newInvoiceList: Invoices[] = [];
         for(let key in listInvoice){
@@ -387,9 +387,10 @@ export class InvoiceController {
             if(el.date !== null){
                 let op: Operations_workflow = new Operations_workflow();
                 op.status = new Operation_invoices_status();
-                op.date = el.operationdate;
+                op.date = el.operation_date;
+                op.updated_at = el.operation_update_date;
                 op.status.description = el.description;
-                op.internal_comment = el.operationcomment;
+                op.internal_comment = el.operation_comment;
                 op.status.status = el.status;
                 op.more_information = el.more_information;
                 el.listOperation = [op];

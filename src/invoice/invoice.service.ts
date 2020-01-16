@@ -14,8 +14,8 @@ export class InvoiceService extends RequestService{
                " SUBSTRING(invoice_type,1,POSITION ( '_' in invoice_type)-1) as energy, " +
                " (SELECT new_balance FROM master.payments_list p WHERE p.invoice_ref = invoices.invoice_ref ORDER BY  p.created_at desc LIMIT 1 ) as openamount"+
                " FROM master.invoices "+
-               " LEFT JOIN (select o.date as operationDate, o.internal_comment as operationComment, st.description, st.status, o.id as operationId, o.more_information FROM master.operations_workflow o" +
-                            " LEFT JOIN  master.operation_invoices_status st ON o.status_id = st.id) as op ON op.operationId = " +
+               " LEFT JOIN (select o.updated_at as operation_update_date, o.date as operation_date, o.internal_comment as operation_comment, st.description, st.status, o.id as operation_id, o.more_information FROM master.operations_workflow o" +
+                            " LEFT JOIN  master.operation_invoices_status st ON o.status_id = st.id) as op ON op.operation_id = " +
                             " (SELECT id from master.operations_workflow op where op.invoice_reference = master.invoices.invoice_ref ORDER BY  op.updated_at desc, op.date desc LIMIT 1)" +
                 " order by invoices.invoice_date_formatted desc, invoices.id) as invoice ";
 

@@ -11,4 +11,7 @@ export class Operation_invoices_status{
 
     @Column()
     description:string;
+
+    @Column()
+    type: string;
 }
