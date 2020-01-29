@@ -1,0 +1,62 @@
+[
+  {
+    "id": 1,
+    "userId": 5,
+    "name": "facture domiciliation",
+    "type": "invoice",
+    "query": "select cont.pod, invoice_date, invoice_ref,cont.contract_client_name as nom_contat,cont.customer_id as id_client, balance_in_progress as montant_ouvert, left_to_pay as montant_total,invoice_type, invoice_sub_type as sous_type, acc.owner_name as client_mandat, acc.nr_mandat as mandat, acc.bic, acc.iban, acc.date_signature from master.invoices inv LEFT JOIN business.cm_contract cont on inv.pod =  cont.pod LEFT JOIN business.bank_contract bank on bank.contract_id = cont.id LEFT JOIN business.account_bank acc on acc.id = bank.account_id",
+    "keyId": "inv.id",
+    "header": [
+      "label.pod",
+      "label.creation_date",
+      "label.invoice_reference",
+      "label.contract_name",
+      "label.client_id",
+      "label.open_amount",
+      "label.amount",
+      "label.type",
+      "label.invoice_type",
+      "Titulaire",
+      "mandat",
+      "BIC",
+      "IBAN",
+      "Date signature"
+    ],
+    "where": null
+  },
+  {
+    "id": 2,
+    "userId": 0,
+    "name" : "contract actif dom - email + adresse facturation",
+    "type": "all",
+    "query": "select invoice_email, cust.main_name, cont.status, bc.type_account, case (select 1 where  addr.billing_number is null)        WHEN 1 THEN CONCAT (addr.billing_address ,' ' , addr.billing_address_extra , ' ' ,addr.billing_post_code, ' ',addr.billing_city_fr )        ELSE CONCAT (addr.billing_number, ', ' ,addr.billing_address ,' ' , addr.billing_address_extra , ' ' ,addr.billing_post_code, ' ',addr.billing_city_fr )    END  as address from business.cm_contract cont  INNER JOIN business.bank_contract bc on cont.id = bc.contract_id  LEFT JOIN business.cm_customer cust on cust.customer_id = cont.customer_id LEFT JOIN business.cm_addresses addr on addr.pod = cont.pod",
+    "where" : " cont.status = 'ACTIVE' and bc.type_account = 'DOM'",
+    "keyId": null ,
+    "header": ["mail","nom du client", "status contrat", "type compte", "addresse" ]
+  },
+  {
+    "id": 3,
+    "userId": 2148 ,
+    "name" : "Rappel",
+    "type": "invoice",
+    "query": "select cont.customer_id, invoice_ref, inv.pod, inv.period_start, inv.period_finish,inv.invoice_date_formatted,cust.main_name, case (select 1 where addr.billing_number is null)  WHEN 1 THEN CONCAT (addr.billing_address ,' ' , addr.billing_address_extra , ' ' ,addr.billing_post_code, ' ',addr.billing_city_fr )  ELSE CONCAT (addr.billing_number, ', ' ,addr.billing_address ,' ' , addr.billing_address_extra , ' ' ,addr.billing_post_code, ' ',addr.billing_city_fr )  END as billing_address, payment_method, left_to_pay as total_amount, balance_in_progress as open_amount from master.invoices  inv  left join business.cm_contract cont on cont.pod = inv.Pod  LEFT JOIN business.cm_customer cust on cust.customer_id = cont.customer_id  LEFT JOIN business.cm_addresses addr on addr.pod = cont.pod",
+    "where" :  null,
+    "keyId": "inv.id" ,
+    "header": [
+      "Numéro client",
+      "Référence facture",
+      "POD",
+      "Période début",
+      "Période fin",
+      "Date facture",
+      "Nom client",
+      "Adresse facturation",
+      "Méthode de paiement",
+      "Montant",
+      "Balance"
+    ]
+
+  }
+
+
+]

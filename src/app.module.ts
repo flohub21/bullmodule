@@ -21,6 +21,7 @@ import { APP_GUARD } from '@nestjs/core';
 import {JwtStrategy} from "./auth/jwt.strategy";
 import { UploadController } from './upload/upload.controller';
 import { UploadService } from './upload/upload.service';
+import { ExportCsvController } from './export-csv/export-csv.controller';
 
 @Module({
   imports: [
@@ -52,7 +53,7 @@ import { UploadService } from './upload/upload.service';
 
     ],
     exports: [CustomerModule],
-    controllers: [MainController, ContractController, OperationsWorkflowController, UserController, PaymentsListController, UploadController]
+    controllers: [MainController, ContractController, OperationsWorkflowController, UserController, PaymentsListController, UploadController, ExportCsvController]
 })
 export class AppModule {
     constructor(){}

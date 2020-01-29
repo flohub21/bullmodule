@@ -12,6 +12,8 @@ import * as moment from 'moment';
 @Controller('invoice')
 @Injectable()
 export class InvoiceController {
+     listCustomerForFilter: any;
+
     constructor(private invoiceService: InvoiceService,
                 private customerCont: CustomerController) {}
 
@@ -264,83 +266,9 @@ export class InvoiceController {
      * find invoice by filter
      */
     async findByFilter(@Body() body){
-        let listCustomer;
-        let listId = [];
-        let addDraftFilter = false;
-        for(let key in body.filter){
-            if(key !== 'union'){
-                addDraftFilter = true;
-
-            }
-        }
-        if(addDraftFilter){
-            body.filter.draft = {};
-            body.filter.draft.operator = '=';
-            body.filter.draft.value = '0'
-            body.filter.draft.quote = true;
-
-        }
-        if(body.filter.customer !== undefined){
-            // if value is an array = multiple pod
-            if(typeof body.filter.customer.value !== 'string'){
-                listCustomer = await this.customerCont.getAllByPod({pod: body.filter.customer.value});
-            } else {
-                listCustomer = await this.customerCont.getAllByAll({str: body.filter.customer.value});
-            }
-
-            if(listCustomer.length > 0) {
-                let listIdCust = [];
-                listCustomer.forEach((el) => {
-                    listIdCust.push(el.customer_id);
-                });
-                body.filter.customer_num = {
-                    "operator" : "IN",
-                    "value":listIdCust
-                };
-            } else {
-                throw new NoResultException();
-            }
-        }
-
-        if(body.filter.operation !== undefined){
-
-            let listInvoice = await this.invoiceService.getAllByOperation(body.filter.operation.value);
-            if(listInvoice.length > 0) {
-                listInvoice.forEach((el) => {
-                    listId.push(el.id);
-                });
-            } else {
-                throw new NoResultException();
-            }
-        }
-        // open amount
-        if(body.filter.openamount != undefined) {
-            body.filter.payed = {};
-            body.filter.payed.operator = '=';
-            body.filter.payed.value = '0';
-            body.filter.payed.quote = true;
-        }
-
-        if(body.filter.refund != undefined) {
-            if(body.filter.invoice_sub_type === undefined){
-                body.filter.invoice_sub_type = {};
-                body.filter.invoice_sub_type.operator = "LIKE";
-                body.filter.invoice_sub_type.value = "DECOMPTE";
-            }
-            if(body.filter.total_price_with_tax === undefined){
-                body.filter.total_price_with_tax = {};
-                body.filter.total_price_with_tax.operator = "::float<";
-                body.filter.total_price_with_tax.value = "0";
-            }
-        }
-        if(listId.length > 0){
-            body.filter.id = {
-                "operator" : "IN",
-                "value":listId
-            };
-        }
-
-        let listInvoice = await this.invoiceService.findByFilter(body.filter);
+       
+        let req: string = await this.generateRequest(body.filter);
+        let listInvoice = await this.invoiceService.findByFilter(req);
         if(body.filter.open !== undefined) {
             let lst: Invoices[] = [];
             listInvoice.forEach((invoice) => {
@@ -357,7 +285,7 @@ export class InvoiceController {
             listInvoice = lst;
         }
         if(listInvoice.length > 0) {
-           listInvoice = await this.trtListInvoice(listInvoice,listCustomer);
+           listInvoice = await this.trtListInvoice(listInvoice,this.listCustomerForFilter);
         } else {
             throw new NoResultException();
         }
@@ -478,6 +406,94 @@ export class InvoiceController {
             listInvoice = await this.trtListInvoice(listInvoice);
         }
         return listInvoice;
+    }
+
+    /**
+     * generateRequest for the filter received
+     * @param filter
+     * @param request the request the clause where ( 'select ...' )
+     */
+    async generateRequest(filter: any, request: string = null){
+        let listId = [];
+        let addDraftFilter = false;
+        for(let key in filter){
+            if(key !== 'union'){
+                addDraftFilter = true;
+
+            }
+        }
+        if(addDraftFilter){
+            filter.draft = {};
+            filter.draft.operator = '=';
+            filter.draft.value = '0'
+            filter.draft.quote = true;
+
+        }
+        if(filter.customer !== undefined){
+            // if value is an array = multiple pod
+            if(typeof filter.customer.value !== 'string'){
+                this.listCustomerForFilter = await this.customerCont.getAllByPod({pod: filter.customer.value});
+            } else {
+                this.listCustomerForFilter = await this.customerCont.getAllByAll({str: filter.customer.value});
+            }
+
+            if(this.listCustomerForFilter.length > 0) {
+                let listIdCust = [];
+                this.listCustomerForFilter.forEach((el) => {
+                    listIdCust.push(el.customer_id);
+                });
+                filter.customer_num = {
+                    "operator" : "IN",
+                    "value":listIdCust
+                };
+            } else {
+                throw new NoResultException();
+            }
+        }
+
+        if(filter.operation !== undefined){
+
+            let listInvoice = await this.invoiceService.getAllByOperation(filter.operation.value);
+            if(listInvoice.length > 0) {
+                listInvoice.forEach((el) => {
+                    listId.push(el.id);
+                });
+            } else {
+                throw new NoResultException();
+            }
+        }
+        // open amount
+        if(filter.openamount != undefined) {
+            filter.payed = {};
+            filter.payed.operator = '=';
+            filter.payed.value = '0';
+            filter.payed.quote = true;
+        }
+
+        if(filter.refund != undefined) {
+            if(filter.invoice_sub_type === undefined){
+                filter.invoice_sub_type = {};
+                filter.invoice_sub_type.operator = "LIKE";
+                filter.invoice_sub_type.value = "DECOMPTE";
+            }
+            if(filter.total_price_with_tax === undefined){
+                filter.total_price_with_tax = {};
+                filter.total_price_with_tax.operator = "::float<";
+                filter.total_price_with_tax.value = "0";
+            }
+        }
+        if(listId.length > 0){
+            filter.id = {
+                "operator" : "IN",
+                "value":listId
+            };
+        }
+
+        return this.invoiceService.generateRequest(filter, request);
+    }
+
+    async runQuery(query: string){
+        return await this.invoiceService.runQuery(query);
     }
 
 

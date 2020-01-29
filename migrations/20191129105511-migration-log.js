@@ -3,7 +3,9 @@
 var dbm;
 var type;
 var seed;
-
+/*
+create the table newbo_logs to save all log
+ */
 /**
   * We receive the dbmigrate dependency from dbmigrate initially.
   * This enables us to not have to rely on NODE_PATH.

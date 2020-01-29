@@ -31,7 +31,6 @@ export class ContractService extends RequestService {
                         " LEFT JOIN business.cm_addresses a ON a.pod = co.pod" +
                         " where co.contract_id LIKE ('%" + str + "%') "+
                         " OR co.pod LIKE ('%" + str + "%') ";
-            ////console.log(req);
             this.managerPostgres.query(req).then((res) => {
                 resolve(res);
             });

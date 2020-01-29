@@ -3,11 +3,13 @@ import {Invoices} from './entity/invoices.entity';
 
 import {RequestService} from '../core/service/request-service';
 import {FilterService} from "../core/service/filter.service";
+import {NoResultException} from "../exception/NoResultException";
 
 
 @Injectable()
 export class InvoiceService extends RequestService{
     repInvoicePostgres: any;
+    managerPostgresProd: any;
     schema: string = 'master';
     reqSelect= "SELECT * from " +
                " (SELECT invoices.*, op.*, SUBSTRING(invoice_type,POSITION ( '_' in invoice_type)+1) as type," +
@@ -185,11 +187,9 @@ export class InvoiceService extends RequestService{
 
     /**
      *  get invoice in database by several filter
-     * @param data any Filter
+     * @param req string request
      */
-   findByFilter(data: any): Promise<Invoices[]>{
-        let req = this.filter.generateRequest(this.reqSelect,data, 10000);
-
+   findByFilter( req: string): Promise<Invoices[]>{
         return new Promise((resolve, reject) => {
             console.log(req);
             this.repInvoicePostgres.query(req).then((listInvoice) => {
@@ -252,6 +252,50 @@ export class InvoiceService extends RequestService{
                 resolve(res);
             });
         });
+    }
+
+    /**
+     * run query in database
+     * @param query string
+     */
+    runQuery(query:string){
+        return new Promise((resolve) => {
+            this.repInvoicePostgres.query(query).then((res) => {
+                console.log(res);
+                resolve(res);
+            });
+        });
+
+        return new Promise((resolve) => {
+            if(! this.managerPostgresProd){
+                this.createConnectionPostgresProd(this.schema).then((manager: any) => {
+                    this.managerPostgresProd = manager;
+                    console.log(this.managerPostgresProd);
+
+                        this.managerPostgresProd.query(query).then((res) => {
+                            resolve(res);
+                        });
+                    });
+            } else {
+                    this.managerPostgresProd.query(query).then((res) => {
+                        resolve(res);
+                });
+            }
+        });
+
+    }
+    /**
+     * generate all request with the filter
+     * @params filter any
+     * @params request string if the select request is not the default
+     *
+     * @return string the full request
+     */
+    async generateRequest(filter: any, request:string = null){
+        if(request){
+            return this.filter.generateRequest(request,filter);
+        }
+        return this.filter.generateRequest(this.reqSelect,filter);
     }
 
 

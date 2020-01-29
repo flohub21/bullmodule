@@ -54,6 +54,25 @@ export abstract class  RequestService {
     }
 
     /**
+     * create connection with postgres database
+     * @return Promise <boolean>
+     */
+    createConnectionPostgresProd(schema: string = null): Promise<any> {
+        let cfg:any = dbConfig.postgres_prod;
+        //console.log(cfg);
+        return new Promise((resolve, reject) => {
+            createConnection(cfg).then((connection) => {
+               // this.connectionPostgres = connection;
+               let managerPostgresProd = getManager("postgres_prod");
+                resolve(managerPostgresProd);
+            }, (err)=>{
+                console.log('err');
+                console.log(err);
+            });
+        });
+    }
+
+    /**
      * get IN ('value') for where in request
      * @param data string [] | any[]
      *        if data is an simple object ( any) ( { key:value, key2:value, ...}, the key is required

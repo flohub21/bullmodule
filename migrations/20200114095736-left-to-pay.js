@@ -4,6 +4,10 @@ var dbm;
 var type;
 var seed;
 
+/*
+ update balance ijn progress for all invoices
+
+ */
 /**
   * We receive the dbmigrate dependency from dbmigrate initially.
   * This enables us to not have to rely on NODE_PATH.

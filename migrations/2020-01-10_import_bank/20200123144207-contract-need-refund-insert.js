@@ -3,11 +3,9 @@
 var dbm;
 var type;
 var seed;
-
 /*
- put in upper case the payment type in payments_list
-*/
-
+create the table newbo_logs to save all log
+ */
 /**
  * We receive the dbmigrate dependency from dbmigrate initially.
  * This enables us to not have to rely on NODE_PATH.
@@ -18,15 +16,15 @@ exports.setup = function(options, seedLink) {
   seed = seedLink;
 };
 
-exports.up = async function(db,callback) {
-  let req = " update master.payments_list "+
-      " set payment_type  = 'PAYMENT'";
+exports.up = function(db, callback) {
+  const req = 'ALTER TABLE business.cm_contract' +
+      ' ADD need_refund boolean default true';
   console.log(req);
-  db.runSql(req,null,callback);
-
+      db.runSql(req,null,callback)
 };
 
 exports.down = function(db,callback) {
+  callback();
   return null;
 };
 
