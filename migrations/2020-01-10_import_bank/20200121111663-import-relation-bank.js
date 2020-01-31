@@ -67,7 +67,7 @@ exports.up = async function(db,callback) {
     // for the refund
     let origin = '';
     let comment = '';
-    let idDomBank = await getBankId(accountDom[iDom].IBAN, accountDom[iDom].customer_id);
+    let idDomBank = await getBankId(accountDom[iDom].IBAN, accountDom[iDom].customer_id,false);
 
     let iRefund = 0;
     // check if there is a refund account for the current customer
@@ -83,7 +83,7 @@ exports.up = async function(db,callback) {
         if(accountDom[iDom].IBAN === accountRefund[iRefund].IBAN){
           idRefundBank = idDomBank;
         } else {
-          idRefundBank = await getBankId(accountRefund[iRefund].IBAN, accountRefund[iRefund].customer_id,true);
+          idRefundBank = await getBankId(accountRefund[iRefund].IBAN, accountRefund[iRefund].customer_id,false);
         }
         origin = accountRefund[iRefund].origin;
         comment = accountRefund[iRefund].comment;
@@ -109,7 +109,7 @@ exports.up = async function(db,callback) {
           " VALUES ("+idDomBank[0].id+","+contract.id+",'DOM', '', '') ;";
       nbInsert++;
 
-      if(accountDom[iDom].customer_id === '100100968') {
+      if(accountDom[iDom].customer_id === '100100968' || true ) {
         console.log('insert dom ');
         console.log(" INSERT INTO business.bank_contract (" +
             "account_id, contract_id, type_account, origin,comment)" +
@@ -125,7 +125,7 @@ exports.up = async function(db,callback) {
             " VALUES (" + idRefundBank[0].id + "," + contract.id + ",'REFUND', '" + origin + "', '" + parseString(comment) + "') ;";
             nbInsert++;
 
-        if(accountDom[iDom].customer_id === '100100968') {
+        if(accountDom[iDom].customer_id === '100100968' || true) {
           console.log('insert refund  ');
           console.log(" INSERT INTO business.bank_contract (" +
               "account_id, contract_id, type_account, origin, comment)" +
@@ -147,7 +147,8 @@ exports.up = async function(db,callback) {
               "account_id, contract_id, type_account, origin, comment)"+
               " VALUES ("+idRefundBank[0].id+","+contract.id+",'REFUND', '"+accountRefund[iRefund].origin+"', '"+parseString(accountRefund[iRefund].comment)+"') ;";
           nbInsert++;
-          if(accountRefund[iRefund].customer_id === '100100968'){
+          console.log('')
+          if(accountRefund[iRefund].customer_id === '100100968' || true){
             console.log('----------');
             console.log(" INSERT INTO business.bank_contract ("+
                 "account_id, contract_id, type_account, origin, comment)"+
@@ -162,7 +163,7 @@ exports.up = async function(db,callback) {
 
   console.log(nbInsert);
   console.log('-------------------------------------------------');
-  //query[5].test = 0;
+
 db.runSql(query,null,callback);
 
   //callback();
@@ -172,7 +173,7 @@ db.runSql(query,null,callback);
     return new Promise((resolve) => {
       let req;
       if(customerId !== null){
-        req = "SELECT id from business.account_bank where iban = '" + iban + "' and client_id = '"+customerId+"'";
+        req = "SELECT id from business.account_bank where iban = '" + iban + "' and customer_id = '"+customerId+"'";
       }else {
         req = "SELECT id from business.account_bank where iban = '" + iban + "'";
       }
@@ -181,6 +182,7 @@ db.runSql(query,null,callback);
         console.log(req);
       }
       db.runSql(req, null, (err, result) => {
+
         resolve(result.rows);
       });
     });
@@ -197,7 +199,13 @@ db.runSql(query,null,callback);
   }
 
   function parseString(str){
-      return str.replace("'","''");
+    while(str.indexOf("'")!== -1){
+      str =  str.replace("'","??");
+    }
+    while(str.indexOf("??")!== -1){
+      str =  str.replace("??","''");
+    }
+    return(str);
   }
 };
 
