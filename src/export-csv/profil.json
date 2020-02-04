@@ -29,7 +29,7 @@
     "userId": 0,
     "name" : "contract actif dom - email + adresse facturation",
     "type": "all",
-    "query": "select invoice_email, cust.main_name, cont.status, bc.type_account, case (select 1 where  addr.billing_number is null)        WHEN 1 THEN CONCAT (addr.billing_address ,' ' , addr.billing_address_extra , ' ' ,addr.billing_post_code, ' ',addr.billing_city_fr )        ELSE CONCAT (addr.billing_number, ', ' ,addr.billing_address ,' ' , addr.billing_address_extra , ' ' ,addr.billing_post_code, ' ',addr.billing_city_fr )    END  as address from business.cm_contract cont  INNER JOIN business.bank_contract bc on cont.id = bc.contract_id  LEFT JOIN business.cm_customer cust on cust.customer_id = cont.customer_id LEFT JOIN business.cm_addresses addr on addr.pod = cont.pod",
+    "query": "select cont.pod, invoice_email, cust.main_name, cont.status, cont.payment_type, addr.billing_number ,addr.billing_address , addr.billing_address_extra , addr.billing_post_code, addr.billing_city_fr from business.cm_contract cont LEFT JOIN business.cm_customer cust on cust.customer_id = cont.customer_id LEFT JOIN business.cm_addresses addr on addr.cm_contract_id = cont.id",
     "where" : " cont.status = 'ACTIVE' and bc.type_account = 'DOM'",
     "keyId": null ,
     "header": ["mail","nom du client", "status contrat", "type compte", "addresse" ]
