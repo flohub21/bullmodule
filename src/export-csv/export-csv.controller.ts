@@ -17,7 +17,6 @@ export class ExportCsvController {
 
     @Get('get_all_profile')
     async getAllProfile() {
-        return 'test';
         for (let key in this.listProfil) {
             if(this.listProfil[key].userId === 0){
                 this.listProfil[key].userName = 'Export Global'
