@@ -50,12 +50,12 @@ export class UploadController {
         console.log(resBody.pod);
         console.log(resBody.customerId);
 
-        //test if the folder customerId exist
+        //pdf if the folder customerId exist
         if (!fs.existsSync('./uploadedFiles/'+resBody.folder+'/'+resBody.customerId+'/')){
             fs.mkdirSync('./uploadedFiles/'+resBody.folder+'/'+resBody.customerId+'/');
         }
 
-        //test if the folder POD exist
+        //pdf if the folder POD exist
         if (!fs.existsSync('./uploadedFiles/'+resBody.folder+'/'+resBody.customerId+'/'+resBody.pod+'/')){
             fs.mkdirSync('./uploadedFiles/'+resBody.folder+'/'+resBody.customerId+'/'+resBody.pod+'/');
         }
@@ -74,7 +74,7 @@ export class UploadController {
 
     }
 //
-// test(@Body() body){
+// pdf(@Body() body){
 //     console.log(body);
 //     console.log('--------');
 // }

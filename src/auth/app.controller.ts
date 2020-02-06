@@ -17,11 +17,12 @@ export class AppController {
     @UseGuards(AuthGuard('jwt'))
     @Get('auth/isLogged')
     async isLogged(){
+        console.log('islogged');
        // this.logService.readCsvFile();
         return true;
     }
 
-    @Get('auth/test')
+    @Get('auth/pdf')
     async test(){
         return await this.authService.test();
 

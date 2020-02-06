@@ -1,4 +1,4 @@
-import {Body, Controller, Get, Injectable, Param, Post, Put, UseGuards} from '@nestjs/common';
+import {Body, Controller, Get, Injectable, Param, Post, Put, Res, UseGuards} from '@nestjs/common';
 import {InvoiceService} from './invoice.service';
 import {Invoices} from './entity/invoices.entity';
 import {CustomerController} from '../customer/customer.controller';
@@ -7,12 +7,18 @@ import {Operations_workflow} from "../operations-workflow/entity/operations-work
 import {Operation_invoices_status} from "../operations-workflow/entity/Operation-invoices-status.entity";
 import { AuthGuard } from '@nestjs/passport';
 import * as moment from 'moment';
+import {RequestService} from "../core/service/request-service";
+
+const https = require('https');
+const fs = require('fs');
+const JSZip = require("jszip");
+
 
 @UseGuards(AuthGuard('jwt'))
 @Controller('invoice')
-@Injectable()
 export class InvoiceController {
      listCustomerForFilter: any;
+     pathPdfDirectory = './pdf/invoice/';
 
     constructor(private invoiceService: InvoiceService,
                 private customerCont: CustomerController) {}
@@ -266,7 +272,7 @@ export class InvoiceController {
      * find invoice by filter
      */
     async findByFilter(@Body() body){
-       
+
         let req: string = await this.generateRequest(body.filter);
         let listInvoice = await this.invoiceService.findByFilter(req);
         if(body.filter.open !== undefined) {
@@ -308,10 +314,6 @@ export class InvoiceController {
             let el:any = listInvoice[key];
             listId.push(el.customer_num);
             newInvoiceList.push(el);
-            /*if(! el.openamount){
-                el.openamount = +el.total_price_with_tax;
-            }*/
-            //let user = await this.userCont.findOne({id:el.user_id})
             if(el.date !== null){
                 let op: Operations_workflow = new Operations_workflow();
                 op.status = new Operation_invoices_status();
@@ -494,6 +496,110 @@ export class InvoiceController {
 
     async runQuery(query: string){
         return await this.invoiceService.runQuery(query);
+    }
+
+    /**
+     * generete a zip with the pdf file for a list of invoice
+     * @param body
+     * @param res
+     */
+    @Post('file_pdf')
+    async getInvoiceFilePdf(@Body() body){
+
+        let listInvoice: Invoices[] = await this.invoiceService.getAllById(body.listIdInvoice);
+        return new Promise((resolve)=> {
+            //console.log('getPdf');
+            let zip = new JSZip();
+            let nbFile = 0;
+            listInvoice.forEach((invoice)=>{
+                const file = fs.createWriteStream(this.pathPdfDirectory+invoice.filename);
+                let options = {
+                    path : '/invoices/'+invoice.filename,
+                    host: 'cdn.eida.lu',
+                    port: '443',
+                    agent: new https.Agent({rejectUnauthorized: false})
+
+                };
+                https.get(options, (response) =>{
+
+                    response.pipe(file);
+
+                    file.on('finish', ()=> {
+                        console.log('http get & save  : '+invoice.filename);
+                        nbFile++;
+                        file.close();
+                        fs.readFile(this.pathPdfDirectory+invoice.filename, (err, data)=>{
+                            zip.file(invoice.filename, data);
+                           // console.log('zip file : ' + invoice.filename);
+                            if(nbFile === listInvoice.length){
+                                //console.log('zip generation');
+                                zip.generateNodeStream({
+                                    type:'nodebuffer',
+                                    streamFiles:true,
+                                    compression: "DEFLATE",
+                                    compressionOptions: {
+                                        level: 9
+                                    }})
+                                    .pipe(fs.createWriteStream(this.pathPdfDirectory+RequestService.userId+'.zip'))
+                                    .on('finish',  ()=> {
+                                        console.log('finish create : ' + nbFile);
+                                        this.deletePdfFile(listInvoice);
+                                        resolve();
+                                    });
+                            }
+
+                        });
+                    });
+                });
+
+            });
+        })
+
+
+    }
+
+    /**
+     * get zip file for one user
+     * @param res
+     */
+    @Get('pdf_zip')
+    async getZip(@Res() res){
+        console.log('getZip');
+        return  res.download(this.pathPdfDirectory+RequestService.userId+'.zip');
+    }
+
+    /**
+     * delete pdf file for a invoice list
+      * @param listInvoice Invoices[]
+     */
+    deletePdfFile(listInvoice : Invoices[]){
+        console.log('delete');
+        let i = 0;
+        listInvoice.forEach((invoice)=>{
+            fs.access(this.pathPdfDirectory+invoice.filename,fs.constants.F_OK,(err)=>{
+                if(err){
+                    console.log('-------------------------------------');
+                    console.log(err);
+                    console.log(invoice.invoice_ref);
+                    console.log(invoice.path);
+                    console.log('-------------------------------------');
+                } else {
+                 /*   console.log(invoice.filename);
+                    console.log(invoice.invoice_ref);*/
+                    try{
+                        fs.unlinkSync(this.pathPdfDirectory+invoice.filename);
+                    } catch(err){
+
+                        console.log(i);
+                        console.log(invoice.filename);
+                    }
+
+                    i++;
+                }
+
+            })
+
+        });
     }
 
 

@@ -32,6 +32,7 @@
     "csv-writer": "^1.5.0",
     "csvjson": "^5.1.0",
     "db-migrate-pg": "^1.0.0",
+    "jszip": "^3.2.2",
     "moment": "^2.24.0",
     "mysql": "^2.17.1",
     "neat-csv": "^5.1.0",

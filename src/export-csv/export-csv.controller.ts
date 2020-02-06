@@ -1,14 +1,13 @@
-import {Body, Controller, Get, Post} from '@nestjs/common';
+import {Body, Controller, Get, Post, UseGuards} from '@nestjs/common';
 import * as profilJson from './profil.json';
 import {UserController} from "../user/user.controller";
 import {ProfilCsvModel} from "./profil-csv.model";
 import {Users} from "../user/entity/users.entity";
-import {InvoiceService} from "../invoice/invoice.service";
 import {RequestService} from "../core/service/request-service";
 import {InvoiceController} from "../invoice/invoice.controller";
-const fs = require('fs');
-const csvjson = require('csvjson');
+import { AuthGuard } from '@nestjs/passport';
 
+@UseGuards(AuthGuard('jwt'))
 @Controller('csv')
 export class ExportCsvController {
 
@@ -17,8 +16,8 @@ export class ExportCsvController {
                 private invoiceCont: InvoiceController) {}
 
     @Get('get_all_profile')
-    async getAllProfile(): Promise<ProfilCsvModel[]> {
-
+    async getAllProfile() {
+        return 'test';
         for (let key in this.listProfil) {
             if(this.listProfil[key].userId === 0){
                 this.listProfil[key].userName = 'Export Global'
@@ -30,6 +29,7 @@ export class ExportCsvController {
 
         }
         return this.listProfil;
+
     }
 
     getProfil(id:number): ProfilCsvModel{

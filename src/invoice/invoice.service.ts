@@ -100,12 +100,12 @@ export class InvoiceService extends RequestService{
         });
     }
 
-    getAllById(listId: string[]): Promise<Invoices>{
-        const req = this.reqSelect + " WHERE id IN ("+this.getINForSql(listId)+")";
+    getAllById(listId: string[]): Promise<Invoices[]>{
+        const req = this.reqSelect + " WHERE id IN ("+this.getINForSql(listId)+") order by id ";
         console.log(req);
         return new Promise((resolve) => {
             this.repInvoicePostgres.query(req).then((listInvoice) => {
-                resolve(listInvoice);;
+                resolve(listInvoice);
             });
         });
     }

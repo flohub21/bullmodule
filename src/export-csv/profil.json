@@ -11,7 +11,7 @@
       "label.creation_date",
       "label.invoice_reference",
       "label.contract_name",
-      "label.client_id",
+      "label.customer_id",
       "label.open_amount",
       "label.amount",
       "label.type",
