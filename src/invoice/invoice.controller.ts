@@ -508,7 +508,6 @@ export class InvoiceController {
 
         let listInvoice: Invoices[] = await this.invoiceService.getAllById(body.listIdInvoice);
         return new Promise((resolve)=> {
-            //console.log('getPdf');
             let zip = new JSZip();
             let nbFile = 0;
             listInvoice.forEach((invoice)=>{
@@ -525,14 +524,11 @@ export class InvoiceController {
                     response.pipe(file);
 
                     file.on('finish', ()=> {
-                        console.log('http get & save  : '+invoice.filename);
                         nbFile++;
                         file.close();
                         fs.readFile(this.pathPdfDirectory+invoice.filename, (err, data)=>{
                             zip.file(invoice.filename, data);
-                           // console.log('zip file : ' + invoice.filename);
                             if(nbFile === listInvoice.length){
-                                //console.log('zip generation');
                                 zip.generateNodeStream({
                                     type:'nodebuffer',
                                     streamFiles:true,
@@ -542,7 +538,6 @@ export class InvoiceController {
                                     }})
                                     .pipe(fs.createWriteStream(this.pathPdfDirectory+RequestService.userId+'.zip'))
                                     .on('finish',  ()=> {
-                                        console.log('finish create : ' + nbFile);
                                         this.deletePdfFile(listInvoice);
                                         resolve();
                                     });
@@ -564,7 +559,6 @@ export class InvoiceController {
      */
     @Get('pdf_zip')
     async getZip(@Res() res){
-        console.log('getZip');
         return  res.download(this.pathPdfDirectory+RequestService.userId+'.zip');
     }
 
@@ -573,7 +567,6 @@ export class InvoiceController {
       * @param listInvoice Invoices[]
      */
     deletePdfFile(listInvoice : Invoices[]){
-        console.log('delete');
         let i = 0;
         listInvoice.forEach((invoice)=>{
             fs.access(this.pathPdfDirectory+invoice.filename,fs.constants.F_OK,(err)=>{
@@ -584,8 +577,6 @@ export class InvoiceController {
                     console.log(invoice.path);
                     console.log('-------------------------------------');
                 } else {
-                 /*   console.log(invoice.filename);
-                    console.log(invoice.invoice_ref);*/
                     try{
                         fs.unlinkSync(this.pathPdfDirectory+invoice.filename);
                     } catch(err){
