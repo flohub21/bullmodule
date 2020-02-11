@@ -505,7 +505,7 @@ export class InvoiceController {
      */
     @Post('file_pdf')
     async getInvoiceFilePdf(@Body() body){
-
+        console.log('get invoice pdf ');
         let listInvoice: Invoices[] = await this.invoiceService.getAllById(body.listIdInvoice);
         return new Promise((resolve)=> {
             let zip = new JSZip();
@@ -520,6 +520,7 @@ export class InvoiceController {
 
                 };
                 https.get(options, (response) =>{
+                    console.log('http.get');
 
                     response.pipe(file);
 
@@ -539,7 +540,7 @@ export class InvoiceController {
                                     .pipe(fs.createWriteStream(this.pathPdfDirectory+RequestService.userId+'.zip'))
                                     .on('finish',  ()=> {
                                         this.deletePdfFile(listInvoice);
-                                        resolve();
+
                                     });
                             }
 
@@ -548,6 +549,7 @@ export class InvoiceController {
                 });
 
             });
+            resolve();
         })
 
 
@@ -568,6 +570,7 @@ export class InvoiceController {
      */
     deletePdfFile(listInvoice : Invoices[]){
         let i = 0;
+        console.log('delete file ');
         listInvoice.forEach((invoice)=>{
             fs.access(this.pathPdfDirectory+invoice.filename,fs.constants.F_OK,(err)=>{
                 if(err){

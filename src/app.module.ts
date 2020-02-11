@@ -1,4 +1,20 @@
 import { Module } from '@nestjs/common';
+import { BullModule } from '@nestjs/bull';
+
+@Module({
+    imports: [
+        BullModule.registerQueue({
+            name: 'audio',
+            redis: {
+                host: 'localhost',
+                port: 6379,
+            }
+        })
+    ]
+})
+export class AppModule {}
+/*import { Module } from '@nestjs/common';
+
 import { InvoiceController } from './invoice/invoice.controller';
 import { InvoiceService } from './invoice/invoice.service';
 import { InvoiceModule } from './invoice/invoice.module';
@@ -22,13 +38,23 @@ import {JwtStrategy} from "./auth/jwt.strategy";
 import { UploadController } from './upload/upload.controller';
 import { UploadService } from './upload/upload.service';
 import { ExportCsvController } from './export-csv/export-csv.controller';
+import {BullModule} from "@nestjs/bull";
+
 
 @Module({
   imports: [
+      BullModule.registerQueue({
+          name: 'pdfeee',
+          redis: {
+              host: 'localhost',
+              port: 6379,
+          }
+      }),
       InvoiceModule,
       CustomerModule,
       UserModule,
       AuthModule
+
   ],
     providers: [
         InvoiceController,
@@ -52,9 +78,9 @@ import { ExportCsvController } from './export-csv/export-csv.controller';
         UploadService
 
     ],
-    exports: [CustomerModule],
+    exports: [CustomerModule, BullModule],
     controllers: [MainController, ContractController, OperationsWorkflowController, UserController, PaymentsListController, UploadController, ExportCsvController]
 })
 export class AppModule {
     constructor(){}
-}
+}*/

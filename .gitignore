@@ -1,6 +1,9 @@
 ﻿node_modules
+dist
+pdf
 ormconfig.json
 package-lock.json
+database.json
 .gitignore
 .idea/workspace.xml
-database.json
+

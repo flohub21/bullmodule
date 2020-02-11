@@ -10,10 +10,12 @@ import {FilterService} from "../core/service/filter.service";
 import {UserController} from "../user/user.controller";
 import {UserService} from "../user/user.service";
 
+
 @Module({
     controllers: [InvoiceController],
     providers: [InvoiceService, CustomerController, OperationsWorkflowService, FilterService,UserController, UserService],
-    imports: [CustomerModule],
+    imports: [CustomerModule]
+
 })
 export class InvoiceModule {
     configure(consumer: MiddlewareConsumer) {
